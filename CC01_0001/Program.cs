@@ -22,8 +22,10 @@ var ADD_ROLES = true;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHostedService<BinanceWebSocketHostedService>();
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer")));
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddRoles<IdentityRole>() // Add roles

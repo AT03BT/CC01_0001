@@ -1,6 +1,6 @@
 ﻿/*
     Models/BinanceExchangeInfo.cs
-    Version: 1.0.0
+    Version: 0.1.0
     (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
     https://creativecommons.org/licenses/by/4.0/
 */
@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace CC01_0001.Models;
 
-public class ExchangeHistory
+public class BinanceExchange
 {
     [Key]
     public int Id { get; set; } 
@@ -23,33 +23,29 @@ public class ExchangeHistory
     [JsonPropertyName("serverTime")]
     public long? ServerTime { get; set; }
 
-    [JsonPropertyName("symbols")]
-    public List<Symbol>? Symbols { get; set; }
 
-    [JsonPropertyName("rateLimits")]
-    public List<RateLimit>? RateLimits { get; set; }
+    public List<CryptoCurrency>? CryptoCurrencies { get; set; }
+    public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; }
 
     [JsonPropertyName("exchangeFilters")]
     public List<ExchangeFilter>? ExchangeFilters { get; set; }
 }
 
-public class RateLimit
+public class CryptoCurrency
 {
     [Key]
     public int Id { get; set; }
-    public string RateLimitType { get; set; }
-    public string Interval { get; set; }
-    public int IntervalNum { get; set; }
-    public int Limit { get; set; }
-    public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public ExchangeHistory BinanceExchangeInfo { get; set; }
+    public string Symbol { get; set; }
+    public string? Name { get; set; }
+
+    public MarketSettings MarketSettings { get; set; }
 }
 
-public class Symbol
+public class MarketSettings
 {
     [Key]
     public int Id { get; set; }
-    public string SymbolName { get; set; } // Or use an int Id and make Symbol unique
+
     public string Status { get; set; }
     public string BaseAsset { get; set; }
     public int BaseAssetPrecision { get; set; }
@@ -67,11 +63,34 @@ public class Symbol
     public bool IsSpotTradingAllowed { get; set; }
     public bool IsMarginTradingAllowed { get; set; }
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public ExchangeHistory? BinanceExchangeInfo { get; set; }
+    public BinanceExchange? BinanceExchangeInfo { get; set; }
 
     public List<SymbolOrderType>? SymbolOrderTypes { get; set; }
     public List<Filter>? Filters { get; set; }
     public List<PermissionSet>? PermissionSets { get; set; } // Assuming this is a list of permission sets   
+}
+
+public class RateLimit
+{
+    [Key]
+    public int Id { get; set; }
+    public string RateLimitType { get; set; }
+    public string Interval { get; set; }
+    public int IntervalNum { get; set; }
+    public int Limit { get; set; }
+
+    public List<BinanceExchangeRateLimits>?  BinanceExchangeRateLimits { get; set; }
+}
+
+public class BinanceExchangeRateLimits
+{
+    [Key]
+    public int RateLimitId { get; set; }
+    public RateLimit? RateLimit { get; set; }
+
+    [Key] 
+    public int BinanceExchangeId { get; set; }
+    public BinanceExchange? BinanceExchange { get; set; }
 }
 
 public class OrderType
@@ -87,7 +106,7 @@ public class SymbolOrderType
 {
     [Key]
     public int SymbolId { get; set; }
-    public Symbol Symbol { get; set; }
+    public MarketSettings Symbol { get; set; }
 
     [Key]
     public int OrderTypeId { get; set; }
@@ -107,7 +126,7 @@ public class Filter
     public string? StepSize { get; set; }
 
     public int? SymbolId { get; set; }
-    public Symbol? Symbol { get; set; }
+    public MarketSettings? Symbol { get; set; }
 }
 
 public class PermissionSet
@@ -144,5 +163,5 @@ public class ExchangeFilter
     public int Id { get; set; }
     // Add properties for exchange filters if needed
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public ExchangeHistory BinanceExchangeInfo { get; set; }
+    public BinanceExchange BinanceExchangeInfo { get; set; }
 }

@@ -1,6 +1,6 @@
 ﻿/*
     Application/ApplicationDbContext.cs
-    Version: 1.0.0
+    Version: 0.1.0
     (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
     https://creativecommons.org/licenses/by/4.0/
 */
@@ -15,8 +15,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<ExchangeHistory> BinanceExchangeInfos { get; set; }
-    public DbSet<Symbol> Symbols { get; set; }
+    public DbSet<BinanceExchange> BinanceExchanges { get; set; }
+    public DbSet<MarketSettings> Symbols { get; set; }
     public DbSet<RateLimit> RateLimits { get; set; }
     public DbSet<ExchangeFilter> ExchangeFilters { get; set; }
     public DbSet<OrderType> OrderTypes { get; set; }
@@ -31,19 +31,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // Join Tables
     public DbSet<SymbolOrderType> SymbolOrderTypes { get; set; }
     public DbSet<PermissionSetPermissions> PermissionSetPermissions { get; set; }
+    public DbSet<BinanceExchangeRateLimits> BinanceExchangeRateLimits { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // One-to-many relationship between BinanceExchangeInfo and other tables
-        modelBuilder.Entity<RateLimit>()
-            .HasOne(rl => rl.BinanceExchangeInfo)
-            .WithMany(bei => bei.RateLimits)
-            .HasForeignKey(rl => rl.BinanceExchangeInfoId);
-
-        modelBuilder.Entity<Symbol>()
+        // One-to-many relationships
+        modelBuilder.Entity<MarketSettings>()
             .HasOne(s => s.BinanceExchangeInfo)
             .WithMany(bei => bei.Symbols)
             .HasForeignKey(s => s.BinanceExchangeInfoId);
@@ -53,14 +49,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(bei => bei.ExchangeFilters)
             .HasForeignKey(ef => ef.BinanceExchangeInfoId);
 
-
-        // One-to-many relationship between Symbol and Filter
         modelBuilder.Entity<Filter>()
             .HasOne(f => f.Symbol)
             .WithMany(s => s.Filters)
             .HasForeignKey(f => f.SymbolId);
 
-        // Many-to-many relationship between Symbol and OrderType
+        // Many-to-many relationship
+        modelBuilder.Entity<BinanceExchangeRateLimits>()
+            .HasKey(rl => new { rl.BinanceExchangeId, rl.RateLimitId });
+
+        modelBuilder.Entity<BinanceExchangeRateLimits>()
+            .HasOne(bx => bx.BinanceExchange)
+            .WithMany(bx => bx.BinanceExchangeRateLimits)
+            .HasForeignKey(bx => bx.BinanceExchangeId);
+
+        modelBuilder.Entity<BinanceExchangeRateLimits>()
+            .HasOne(rl => rl.RateLimit)
+            .WithMany(rl => rl.BinanceExchangeRateLimits)
+            .HasForeignKey(rl => rl.RateLimitId);
+
+
         modelBuilder.Entity<SymbolOrderType>()
             .HasKey(ot => new { ot.SymbolId, ot.OrderTypeId }); // Composite key
 
@@ -74,7 +82,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(o => o.SymbolOrderTypes)
             .HasForeignKey(ot => ot.OrderTypeId);
 
-        // Many-to-many relationship between Symbol and PermissionSet
         modelBuilder.Entity<PermissionSetPermissions>()
             .HasKey(ps => new { ps.PermissionSetId, ps.PermissionId }); // Composite key
 

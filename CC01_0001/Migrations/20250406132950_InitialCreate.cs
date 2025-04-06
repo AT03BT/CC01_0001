@@ -15,10 +15,10 @@ namespace CC01_0001.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,23 +29,23 @@ namespace CC01_0001.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    FirstName = table.Column<string>(type: "TEXT", nullable: false),
-                    LastName = table.Column<string>(type: "TEXT", nullable: false),
-                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,35 +53,35 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BinanceExchangeInfos",
+                name: "BinanceExchanges",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Timestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Timezone = table.Column<string>(type: "TEXT", nullable: true),
-                    ServerTime = table.Column<long>(type: "INTEGER", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Timezone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ServerTime = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BinanceExchangeInfos", x => x.Id);
+                    table.PrimaryKey("PK_BinanceExchanges", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "BinanceTrades",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    EventType = table.Column<string>(type: "TEXT", nullable: false),
-                    EventTime = table.Column<long>(type: "INTEGER", nullable: false),
-                    Symbol = table.Column<string>(type: "TEXT", nullable: false),
-                    TradeId = table.Column<long>(type: "INTEGER", nullable: false),
-                    Price = table.Column<string>(type: "TEXT", nullable: false),
-                    Quantity = table.Column<string>(type: "TEXT", nullable: false),
-                    TradeTime = table.Column<long>(type: "INTEGER", nullable: false),
-                    IsBuyerMarketMaker = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Ignore = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EventType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EventTime = table.Column<long>(type: "bigint", nullable: false),
+                    Symbol = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TradeId = table.Column<long>(type: "bigint", nullable: false),
+                    Price = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Quantity = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TradeTime = table.Column<long>(type: "bigint", nullable: false),
+                    IsBuyerMarketMaker = table.Column<bool>(type: "bit", nullable: false),
+                    Ignore = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -92,9 +92,9 @@ namespace CC01_0001.Migrations
                 name: "OrderTypes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    TypeTag = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TypeTag = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -105,10 +105,10 @@ namespace CC01_0001.Migrations
                 name: "Permissions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    PermissionTag = table.Column<string>(type: "TEXT", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PermissionTag = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -116,14 +116,30 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RateLimits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RateLimitType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Interval = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IntervalNum = table.Column<int>(type: "int", nullable: false),
+                    Limit = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RateLimits", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -140,11 +156,11 @@ namespace CC01_0001.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -161,10 +177,10 @@ namespace CC01_0001.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -181,8 +197,8 @@ namespace CC01_0001.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -205,10 +221,10 @@ namespace CC01_0001.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    LoginProvider = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 128, nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -225,40 +241,17 @@ namespace CC01_0001.Migrations
                 name: "ExchangeFilters",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    BinanceExchangeInfoId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    BinanceExchangeInfoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ExchangeFilters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExchangeFilters_BinanceExchangeInfos_BinanceExchangeInfoId",
+                        name: "FK_ExchangeFilters_BinanceExchanges_BinanceExchangeInfoId",
                         column: x => x.BinanceExchangeInfoId,
-                        principalTable: "BinanceExchangeInfos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RateLimits",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RateLimitType = table.Column<string>(type: "TEXT", nullable: false),
-                    Interval = table.Column<string>(type: "TEXT", nullable: false),
-                    IntervalNum = table.Column<int>(type: "INTEGER", nullable: false),
-                    Limit = table.Column<int>(type: "INTEGER", nullable: false),
-                    BinanceExchangeInfoId = table.Column<int>(type: "INTEGER", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RateLimits", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_RateLimits_BinanceExchangeInfos_BinanceExchangeInfoId",
-                        column: x => x.BinanceExchangeInfoId,
-                        principalTable: "BinanceExchangeInfos",
+                        principalTable: "BinanceExchanges",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -267,34 +260,58 @@ namespace CC01_0001.Migrations
                 name: "Symbols",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    SymbolName = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", nullable: false),
-                    BaseAsset = table.Column<string>(type: "TEXT", nullable: false),
-                    BaseAssetPrecision = table.Column<int>(type: "INTEGER", nullable: false),
-                    QuoteAsset = table.Column<string>(type: "TEXT", nullable: false),
-                    QuotePrecision = table.Column<int>(type: "INTEGER", nullable: false),
-                    QuoteAssetPrecision = table.Column<int>(type: "INTEGER", nullable: false),
-                    BaseCommissionPrecision = table.Column<int>(type: "INTEGER", nullable: false),
-                    QuoteCommissionPrecision = table.Column<int>(type: "INTEGER", nullable: false),
-                    IcebergAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    OcoAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    OtoAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    QuoteOrderQtyMarketAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AllowTrailingStop = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CancelReplaceAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsSpotTradingAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsMarginTradingAllowed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    BinanceExchangeInfoId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SymbolName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BaseAsset = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BaseAssetPrecision = table.Column<int>(type: "int", nullable: false),
+                    QuoteAsset = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    QuotePrecision = table.Column<int>(type: "int", nullable: false),
+                    QuoteAssetPrecision = table.Column<int>(type: "int", nullable: false),
+                    BaseCommissionPrecision = table.Column<int>(type: "int", nullable: false),
+                    QuoteCommissionPrecision = table.Column<int>(type: "int", nullable: false),
+                    IcebergAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    OcoAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    OtoAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    QuoteOrderQtyMarketAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    AllowTrailingStop = table.Column<bool>(type: "bit", nullable: false),
+                    CancelReplaceAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    IsSpotTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    IsMarginTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
+                    BinanceExchangeInfoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Symbols", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Symbols_BinanceExchangeInfos_BinanceExchangeInfoId",
+                        name: "FK_Symbols_BinanceExchanges_BinanceExchangeInfoId",
                         column: x => x.BinanceExchangeInfoId,
-                        principalTable: "BinanceExchangeInfos",
+                        principalTable: "BinanceExchanges",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BinanceExchangeRateLimits",
+                columns: table => new
+                {
+                    RateLimitId = table.Column<int>(type: "int", nullable: false),
+                    BinanceExchangeId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BinanceExchangeRateLimits", x => new { x.BinanceExchangeId, x.RateLimitId });
+                    table.ForeignKey(
+                        name: "FK_BinanceExchangeRateLimits_BinanceExchanges_BinanceExchangeId",
+                        column: x => x.BinanceExchangeId,
+                        principalTable: "BinanceExchanges",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BinanceExchangeRateLimits_RateLimits_RateLimitId",
+                        column: x => x.RateLimitId,
+                        principalTable: "RateLimits",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -303,16 +320,16 @@ namespace CC01_0001.Migrations
                 name: "Filters",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    FilterType = table.Column<string>(type: "TEXT", nullable: true),
-                    MinPrice = table.Column<string>(type: "TEXT", nullable: true),
-                    MaxPrice = table.Column<string>(type: "TEXT", nullable: true),
-                    TickSize = table.Column<string>(type: "TEXT", nullable: true),
-                    MinQty = table.Column<string>(type: "TEXT", nullable: true),
-                    MaxQty = table.Column<string>(type: "TEXT", nullable: true),
-                    StepSize = table.Column<string>(type: "TEXT", nullable: true),
-                    SymbolId = table.Column<int>(type: "INTEGER", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FilterType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MinPrice = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MaxPrice = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TickSize = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MinQty = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MaxQty = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StepSize = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SymbolId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -328,9 +345,9 @@ namespace CC01_0001.Migrations
                 name: "PermissionSets",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    SymbolId = table.Column<int>(type: "INTEGER", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SymbolId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -346,8 +363,8 @@ namespace CC01_0001.Migrations
                 name: "SymbolOrderTypes",
                 columns: table => new
                 {
-                    SymbolId = table.Column<int>(type: "INTEGER", nullable: false),
-                    OrderTypeId = table.Column<int>(type: "INTEGER", nullable: false)
+                    SymbolId = table.Column<int>(type: "int", nullable: false),
+                    OrderTypeId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -370,8 +387,8 @@ namespace CC01_0001.Migrations
                 name: "PermissionSetPermissions",
                 columns: table => new
                 {
-                    PermissionSetId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PermissionId = table.Column<int>(type: "INTEGER", nullable: false)
+                    PermissionSetId = table.Column<int>(type: "int", nullable: false),
+                    PermissionId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -399,7 +416,8 @@ namespace CC01_0001.Migrations
                 name: "RoleNameIndex",
                 table: "AspNetRoles",
                 column: "NormalizedName",
-                unique: true);
+                unique: true,
+                filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -425,7 +443,13 @@ namespace CC01_0001.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true);
+                unique: true,
+                filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BinanceExchangeRateLimits_RateLimitId",
+                table: "BinanceExchangeRateLimits",
+                column: "RateLimitId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ExchangeFilters_BinanceExchangeInfoId",
@@ -446,11 +470,6 @@ namespace CC01_0001.Migrations
                 name: "IX_PermissionSets_SymbolId",
                 table: "PermissionSets",
                 column: "SymbolId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RateLimits_BinanceExchangeInfoId",
-                table: "RateLimits",
-                column: "BinanceExchangeInfoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SymbolOrderTypes_OrderTypeId",
@@ -482,6 +501,9 @@ namespace CC01_0001.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "BinanceExchangeRateLimits");
+
+            migrationBuilder.DropTable(
                 name: "BinanceTrades");
 
             migrationBuilder.DropTable(
@@ -494,9 +516,6 @@ namespace CC01_0001.Migrations
                 name: "PermissionSetPermissions");
 
             migrationBuilder.DropTable(
-                name: "RateLimits");
-
-            migrationBuilder.DropTable(
                 name: "SymbolOrderTypes");
 
             migrationBuilder.DropTable(
@@ -504,6 +523,9 @@ namespace CC01_0001.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "RateLimits");
 
             migrationBuilder.DropTable(
                 name: "PermissionSets");
@@ -518,7 +540,7 @@ namespace CC01_0001.Migrations
                 name: "Symbols");
 
             migrationBuilder.DropTable(
-                name: "BinanceExchangeInfos");
+                name: "BinanceExchanges");
         }
     }
 }
