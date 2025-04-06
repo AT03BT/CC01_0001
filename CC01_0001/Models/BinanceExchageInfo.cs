@@ -70,6 +70,18 @@ public class MarketSettings
     public List<PermissionSet>? PermissionSets { get; set; } // Assuming this is a list of permission sets   
 }
 
+public class ExchangeCurrencySettings
+{
+    public int ExchangeId { get; set; }
+    public BinanceExchange? Exchange { get; set; }
+
+    public int CurrencyId { get; set; }
+    public CryptoCurrency? Currency { get; set; }
+
+    public int MarketSettingsId { get; set; }
+    public MarketSettings? MarketSettings { get; set; }
+}
+
 public class RateLimit
 {
     [Key]

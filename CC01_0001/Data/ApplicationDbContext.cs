@@ -54,6 +54,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(s => s.Filters)
             .HasForeignKey(f => f.SymbolId);
 
+
         // Many-to-many relationship
         modelBuilder.Entity<BinanceExchangeRateLimits>()
             .HasKey(rl => new { rl.BinanceExchangeId, rl.RateLimitId });
@@ -82,6 +83,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .WithMany(o => o.SymbolOrderTypes)
             .HasForeignKey(ot => ot.OrderTypeId);
 
+
         modelBuilder.Entity<PermissionSetPermissions>()
             .HasKey(ps => new { ps.PermissionSetId, ps.PermissionId }); // Composite key
 
@@ -94,5 +96,25 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(ps => ps.Permission)
             .WithMany(p => p.PermissionSetPermissions)
             .HasForeignKey(ps => ps.PermissionId);
+
+
+        modelBuilder.Entity<ExchangeCurrencySettings>()
+            .HasKey(ecs => new { ecs.ExchangeId, ecs.CurrencyId, ecs.MarketSettingsId });
+
+        modelBuilder.Entity<ExchangeCurrencySettings>()
+            .HasOne(ecs => ecs.Exchange)
+            .WithMany()
+            .HasForeignKey(ecs => ecs.ExchangeId);
+
+        modelBuilder.Entity<ExchangeCurrencySettings>()
+            .HasOne(ecs => ecs.Currency)
+            .WithMany()
+            .HasForeignKey(ecs => ecs.Currency);
+
+        modelBuilder.Entity<ExchangeCurrencySettings>()
+            .HasOne(ecs => ecs.MarketSettings)
+            .WithMany()
+            .HasForeignKey(ecs => ecs.MarketSettings);
+
     }
 }
