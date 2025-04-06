@@ -15,7 +15,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<BinanceExchangeInfo> BinanceExchangeInfos { get; set; }
+    public DbSet<ExchangeHistory> BinanceExchangeInfos { get; set; }
     public DbSet<Symbol> Symbols { get; set; }
     public DbSet<RateLimit> RateLimits { get; set; }
     public DbSet<ExchangeFilter> ExchangeFilters { get; set; }

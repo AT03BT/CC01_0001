@@ -64,7 +64,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
         ApplicationDbContext dbContext;
         HttpResponseMessage httpResponse;
-        BinanceExchangeInfo exchangeInfo = new BinanceExchangeInfo();
+        ExchangeHistory exchangeInfo = new ExchangeHistory();
         String jsonString;
         IServiceScope scope;
 
@@ -93,7 +93,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
 
 
-    private void ParseExchangeInfo(ApplicationDbContext dbContext, BinanceExchangeInfo exchangeInfo, string json)
+    private void ParseExchangeInfo(ApplicationDbContext dbContext, ExchangeHistory exchangeInfo, string json)
     {
         exchangeInfo.Timestamp = DateTime.UtcNow;
         var byteBuffer = System.Text.Encoding.UTF8.GetBytes(json);
@@ -157,7 +157,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
     }
 
-    private void ParseSymbols(ApplicationDbContext dbContext, BinanceExchangeInfo exchangeInfo, Utf8JsonReader reader, string json)
+    private void ParseSymbols(ApplicationDbContext dbContext, ExchangeHistory exchangeInfo, Utf8JsonReader reader, string json)
     {
         var setName = reader.GetString();
         List<Symbol> symbols = new List<Symbol>();

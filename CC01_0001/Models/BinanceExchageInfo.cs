@@ -10,7 +10,7 @@ using System.Text.Json.Serialization;
 
 namespace CC01_0001.Models;
 
-public class BinanceExchangeInfo
+public class ExchangeHistory
 {
     [Key]
     public int Id { get; set; } 
@@ -42,7 +42,7 @@ public class RateLimit
     public int IntervalNum { get; set; }
     public int Limit { get; set; }
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public BinanceExchangeInfo BinanceExchangeInfo { get; set; }
+    public ExchangeHistory BinanceExchangeInfo { get; set; }
 }
 
 public class Symbol
@@ -67,7 +67,7 @@ public class Symbol
     public bool IsSpotTradingAllowed { get; set; }
     public bool IsMarginTradingAllowed { get; set; }
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public BinanceExchangeInfo? BinanceExchangeInfo { get; set; }
+    public ExchangeHistory? BinanceExchangeInfo { get; set; }
 
     public List<SymbolOrderType>? SymbolOrderTypes { get; set; }
     public List<Filter>? Filters { get; set; }
@@ -144,5 +144,5 @@ public class ExchangeFilter
     public int Id { get; set; }
     // Add properties for exchange filters if needed
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public BinanceExchangeInfo BinanceExchangeInfo { get; set; }
+    public ExchangeHistory BinanceExchangeInfo { get; set; }
 }
