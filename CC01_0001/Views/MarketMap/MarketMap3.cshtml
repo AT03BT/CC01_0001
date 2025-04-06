@@ -1,0 +1,356 @@
+﻿@* Views/Crypto/MarketMap.cshtml
+    Version: 2.4
+    (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
+    https://creativecommons.org/licenses/by/4.0/
+*@
+@model CC01_0001.ViewModels.CryptoMarketViewModel
+
+@{
+    ViewData["Title"] = "Crypto Market Treemap";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+    <p>A categorised treemap visualization of the cryptocurrency market.</p>
+
+    <!-- Category Filters -->
+    <div>
+        <label><input type="checkbox" id="currencyFilter" checked> Currency</label>
+        <label><input type="checkbox" id="platformFilter" checked> Platform</label>
+        <label><input type="checkbox" id="defiFilter" checked> DeFi</label>
+        <label><input type="checkbox" id="nftFilter" checked> NFT</label>
+    </div>
+
+    <!-- Sentiment Filters -->
+    <div>
+        <label><input type="checkbox" id="bullishFilter" checked> Bullish</label>
+        <label><input type="checkbox" id="bearishFilter" checked> Bearish</label>
+        <label><input type="checkbox" id="neutralFilter" checked> Neutral</label>
+    </div>
+
+    <div id="crypto-map"></div>
+    <div id="crypto-details">
+        <h3>Selected Cryptocurrency:</h3>
+        <div id="crypto-details-content">
+            <p>Hover over a rectangle to see details.</p>
+        </div>
+    </div>
+
+    @section Styles {
+        <style>
+            /* Forcing the CSS Styles to override */
+            #crypto-map {
+                width: 100%;
+                height: 600px; /* Set a default height */
+                border: 1px solid #ccc;
+                position: relative; /* For tooltip positioning */
+                box-sizing: border-box;
+                padding: 0px; /* Ensure no extra padding */
+                margin: 0px; /* Ensure no extra margin */
+            }
+
+            /*Tooltip Styling for consistent design */
+            .tooltip {
+                position: absolute;
+                background-color: white;
+                border: 1px solid black;
+                padding: 5px;
+                font-size: 12px;
+                pointer-events: none; /* Prevents interfering events */
+                opacity: 0; /* Hidden by default */
+                transition: opacity 0.2s; /* Smooth fade-in effect */
+                z-index: 10; /* Ensure tooltip is above other elements */
+            }
+
+            .category-label {
+                /* ... other styles ... */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 90%; /* Adjust this percentage based on padding */
+                display: block; /* Make it a block-level element */
+                text-anchor: start; /* Align the text to the start (left) */
+            }
+
+            .crypto-label {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                width: 90%;
+                display: block;
+                text-anchor: start;
+            }
+
+            #crypto-details {
+                margin-top: 20px;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+
+            #crypto-details-content {
+                font-size: 14px;
+            }
+            /* Style for filter labels */
+            label {
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            /* Style for checkbox inputs */
+            input[type="checkbox"] {
+                margin-right: 5px;
+            }
+        </style>
+    }
+
+    @section Scripts {
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+
+            document.addEventListener("DOMContentLoaded", () => {
+
+                try {
+
+                    const cryptoData = @Html.Raw(Json.Serialize(Model.CryptoData));
+
+                    // 1. Get filter elements
+                    const currencyFilter = document.getElementById("currencyFilter");
+                    const platformFilter = document.getElementById("platformFilter");
+                    const defiFilter = document.getElementById("defiFilter");
+                    const nftFilter = document.getElementById("nftFilter");
+
+                    const bullishFilter = document.getElementById("bullishFilter");
+                    const bearishFilter = document.getElementById("bearishFilter");
+                    const neutralFilter = document.getElementById("neutralFilter");
+
+                    const container = document.getElementById("crypto-map");
+
+                    // Function to calculate available width and height
+                    function calculateChartSize() {
+                        // Get the container's dimensions
+                        let width = container.clientWidth;
+                        let height = container.clientHeight;
+
+                        // Account for border (if any)
+                        const border = parseInt(window.getComputedStyle(container).borderWidth, 10) || 0;
+                        width -= 2 * border;
+                        height -= 2 * border;
+
+                        return { width, height };
+                    }
+
+                    let chartSize = calculateChartSize();
+                    let width = chartSize.width;
+                    let height = chartSize.height;
+
+                    // Create a hierarchical structure based on 'category'
+                    function updateChart() {
+
+                        chartSize = calculateChartSize();
+                        width = chartSize.width;
+                        height = chartSize.height;
+
+                        const filteredData = cryptoData.filter(d =>
+                            (currencyFilter.checked && d.category === "Currency") ||
+                            (platformFilter.checked && d.category === "Platform") ||
+                            (defiFilter.checked && d.category === "DeFi") ||
+                            (nftFilter.checked && d.category === "NFT")
+                        ).filter(d =>
+                            (bullishFilter.checked && d.sentiment === "bullish") ||
+                            (bearishFilter.checked && d.sentiment === "bearish") ||
+                            (neutralFilter.checked && d.sentiment === "neutral")
+                        );
+
+                        // Group data by category
+                        const groupedData = d3.group(filteredData, d => d.category);
+
+                        const root = d3.hierarchy({
+                            key: "Crypto Market",
+                            children: Array.from(groupedData, ([key, values]) => ({
+                                key: key,
+                                children: values
+                            }))
+                        })
+                            .sum(d => d.marketCap)
+                            .sort((a, b) => b.value - a.value);
+
+
+                        // Create the treemap layout
+                        const treemap = d3.treemap()
+                            .size([width, height])
+                            .paddingInner(3)  // Add padding between children of a node
+                            .paddingOuter(6) // Add padding around the whole treemap
+                            .paddingTop(15)  // Add padding to the top of internal nodes (for labels)
+                            .paddingBottom(3) // Add padding to the bottom of internal nodes
+                            .paddingLeft(3)  // Add padding to the left of internal nodes
+                            .paddingRight(3) // Add padding to the right of internal nodes
+                            .round(true)
+                            (root);
+
+                        // Create the SVG container
+                        d3.select("#crypto-map").select("svg").remove();
+                        const svg = d3.select("#crypto-map")
+                            .append("svg")
+                            .attr("width", "100%") // Make the SVG take up 100% of its container's width
+                            .attr("height", "100%")// Make the SVG take up 100% of its container's height
+                            .attr("viewBox", [0, 0, width, height]) // Define the coordinate system for the SVG
+                            .attr("preserveAspectRatio", "xMidYMid meet")
+                            .attr("style", "max-width: 100%; height: auto; overflow: visible;");
+
+                        // Create the tooltip
+                        const tooltip = d3.select("body")
+                            .append("div")
+                            .attr("class", "tooltip")
+                            .style("opacity", 0)
+                            .style("position", "absolute")
+                            .style("background-color", "white")
+                            .style("border", "solid")
+                            .style("border-width", "1px")
+                            .style("border-radius", "5px")
+                            .style("padding", "5px");
+
+                        // Mouseover event handler
+                        const mouseover = function (event, d) {
+                            tooltip
+                                .style("opacity", 1);
+                        };
+
+                        // Mousemove event handler
+                        const mousemove = function (event, d) {
+                            tooltip
+                                .html(`Symbol: ${d.data.symbol}<br>Name: ${d.data.name}<br>Market Cap: $${d.data.marketCap}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        };
+
+                        // Mouseleave event handler
+                        const mouseleave = function (event, d) {
+                            tooltip
+                                .style("opacity", 0);
+                        };
+
+                        // Click event handler
+                        const click = function (event, d) {
+                            if (d.depth === 0) return;  // Do nothing on root click
+
+                            const detailsContent = document.getElementById("crypto-details-content");
+                            let detailsHTML = "";
+
+                            if (d.depth === 1) { // Category click
+                                detailsHTML = `<p><strong>Category:</strong> ${d.data.key}</p>`;
+                            } else { // Crypto click
+                                detailsHTML = `
+                                    <p><strong>Symbol:</strong> ${d.data.symbol}</p>
+                                    <p><strong>Name:</strong> ${d.data.name}</p>
+                                    <p><strong>Category:</strong> ${d.data.category}</p>
+                                    <p><strong>Market Cap:</strong> $${d.data.marketCap}</p>
+                                    <p><strong>Sentiment:</strong> ${d.data.sentiment}</p>
+                                `;
+                            }
+
+                            detailsContent.innerHTML = detailsHTML;
+                        };
+
+
+
+                        // Create the rectangles for the treemap
+                        const cell = svg.selectAll("g")
+                            .data(root.descendants().filter(d => d.depth > 0))
+                            .join("g")
+                            .attr("transform", d => `translate(${d.x0},${d.y0})`);
+
+                        cell.append("rect")
+                            .attr("width", d => d.x1 - d.x0)
+                            .attr("height", d => d.y1 - d.y0)
+                            .style("stroke", "black")
+                            .style("fill", d => {
+                                // Use the 'sentiment' property to define colors
+
+                                if (d.depth === 1) {
+                                    //Different shades for categories
+                                    const categoryColors = {
+                                        "Currency": "#1f77b4",  // muted blue
+                                        "Platform": "#ff7f0e",  // safety orange
+                                        "DeFi": "#2ca02c",   // cooked asparagus green
+                                        "NFT": "#d62728"    // brick red
+                                    };
+                                    return categoryColors[d.data.key] || "gray"; // Default color for root or unknown
+                                }
+                                else {
+                                    if (d.data.sentiment === "bullish") {
+                                        return "green";
+                                    } else if (d.data.sentiment === "bearish") {
+                                        return "red";
+                                    } else {
+                                        return "gray"; // Default color
+                                    }
+                                }
+                            })
+                            .style("stroke", d => d.depth === 1 ? "#fff" : "black") //White stroke for category rectangles
+                            .on("mouseover", mouseover)
+                            .on("mousemove", mousemove)
+                            .on("mouseleave", mouseleave)
+                            .on("click", click); // Add click event listener
+
+                        // Add text labels to the rectangles
+
+                        cell.filter(d => d.depth === 1)
+                            .append("text")
+                            .attr("class", "category-label")
+                            .attr("x", 3)  // Top-left corner, with a little padding
+                            .attr("y", 13) // Top-left corner, with a little padding
+                            .attr("dy", "0") //Remove the effect to see the impact.
+                            .attr("font-size", "80%")
+                            .attr("fill", "white")
+                            .style("text-anchor", "start")
+                            .text(d => d.data.key);
+
+                        cell.filter(d => d.depth > 0 && d.height === 0)
+                            .append("text")
+                            .attr("class", "crypto-label")
+                            .attr("x", 3)
+                            .attr("y", 13)
+                            .attr("dy", "0")
+                            .attr("font-size", "80%")
+                            .attr("fill", "white")
+                            .style("text-anchor", "start")
+                            .attr("title", d => d.data.key)  // Add the title attribute
+                            .text(d => d.data.symbol);
+                    }
+
+                    const filters = ["currencyFilter", "platformFilter", "defiFilter", "nftFilter", "bullishFilter", "bearishFilter", "neutralFilter"];
+                    filters.forEach(filterId => {
+                        const filterElement = document.getElementById(filterId);
+                        if (filterElement) {  // Check if the element exists
+                            filterElement.addEventListener("change", updateChart);
+                        } else {
+                            console.warn(`Filter element with ID '${filterId}' not found.`);
+                        }
+                    });
+                    updateChart();
+
+                    function resizeChart() {
+                        const container = document.getElementById("crypto-map");
+                        chartSize = calculateChartSize();
+                        width = chartSize.width;
+                        height = chartSize.height;
+                        updateChart();  // Re-render the chart with new dimensions
+                    }
+
+                    window.addEventListener("resize", resizeChart);
+
+
+                } catch (error) {
+                    console.error("Error initializing or drawing the chart:", error);
+                    const mapDiv = document.getElementById("crypto-map");
+                    if (mapDiv) {
+                        mapDiv.innerHTML = "<p style='color:red;'>Error loading the crypto market map. Please check the console for details.</p>";
+                    }
+                }
+                // Add event listener to filters after the DOM loads
+                console.log("D3 script loaded");  // Helpful message
+            });
+
+        </script>
+    }
+</div>

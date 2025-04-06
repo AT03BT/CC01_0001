@@ -1,0 +1,41 @@
+﻿@* Views/BinanceData/ExchangeInfo.cshtml
+    Version: 1.3
+    (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
+    https://creativecommons.org/licenses/by/4.0/
+*@
+@model CC01_0001.ViewModels.ExchangeInfoViewModel
+
+@{
+    ViewData["Title"] = "Binance Exchange Info";
+}
+
+<h1>Binance Exchange Info</h1>
+
+<p>Timezone: @Model.Timezone</p>
+<p>Server Time: @Model.ServerTime</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Status</th>
+            <th>Base Asset</th>
+            <th>Quote Asset</th>
+            <th>Min Price</th>
+            <th>Max Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var symbol in Model.Symbols)
+        {
+            <tr>
+                <td>@symbol.Symbol</td>
+                <td>@symbol.Status</td>
+                <td>@symbol.BaseAsset</td>
+                <td>@symbol.QuoteAsset</td>
+                <td>@symbol.MinPrice</td>
+                <td>@symbol.MaxPrice</td>
+            </tr>
+        }
+    </tbody>
+</table>

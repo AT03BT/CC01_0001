@@ -1,0 +1,277 @@
+﻿@* Views/Crypto/MarketMap.cshtml
+Version: 1.2.0
+(c) 2024, Minh Tri Tran - Licensed under CC BY 4.0
+https://creativecommons.org/licenses/by/4.0/
+*@
+
+@{
+    ViewData["Title"] = "Crypto Market Treemap";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+    <p>A treemap visualization of the cryptocurrency market.</p>
+
+    <!-- Category Filters -->
+    <div>
+        <label><input type="checkbox" id="currencyFilter" checked> Currency</label>
+        <label><input type="checkbox" id="platformFilter" checked> Platform</label>
+        <label><input type="checkbox" id="defiFilter" checked> DeFi</label>
+        <label><input type="checkbox" id="nftFilter" checked> NFT</label>
+    </div>
+
+    <!-- Sentiment Filters -->
+    <div>
+        <label><input type="checkbox" id="bullishFilter" checked> Bullish</label>
+        <label><input type="checkbox" id="bearishFilter" checked> Bearish</label>
+        <label><input type="checkbox" id="neutralFilter" checked> Neutral</label>
+    </div>
+
+    <div id="crypto-map"></div>
+
+    @section Styles {
+        <style>
+            #crypto-map {
+                width: 100%;
+                height: 600px;
+                border: 1px solid #ccc;
+                position: relative;
+                box-sizing: border-box;
+            }
+
+            .tooltip {
+                position: absolute;
+                background-color: white;
+                border: 1px solid black;
+                padding: 5px;
+                font-size: 12px;
+                pointer-events: none;
+                opacity: 0; /* Hidden by default */
+                transition: opacity 0.2s; /* Smooth fade-in effect */
+                z-index: 10; /* Ensure tooltip is above other elements */
+            }
+            /* Style for filter labels */
+            label {
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            /* Style for checkbox inputs */
+            input[type="checkbox"] {
+                margin-right: 5px;
+            }
+
+            .category {
+                font-size: 16px;
+                font-weight: bold;
+                fill: black; /* Category label color */
+            }
+
+        </style>
+    }
+
+    @section Scripts {
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+
+            document.addEventListener("DOMContentLoaded", () => {
+
+                const cryptoData = @Html.Raw(Json.Serialize(Model.CryptoData));
+
+                const container = document.getElementById("crypto-map");
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+
+                const svg = d3.select("#crypto-map")
+                    .append("svg")
+                    .attr("width", "100%")
+                    .attr("height", "100%")
+                    .attr("viewBox", [0, 0, width, height])
+                    .attr("preserveAspectRatio", "xMidYMid meet");
+
+                const tooltip = d3.select("body")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .style("position", "absolute")
+                    .style("background-color", "white")
+                    .style("border", "1px solid black")
+                    .style("padding", "5px")
+                    .style("display", "none");
+
+
+                function updateChart() {
+
+                    const currencyFilter = document.getElementById("currencyFilter").checked;
+                    const platformFilter = document.getElementById("platformFilter").checked;
+                    const defiFilter = document.getElementById("defiFilter").checked;
+                    const nftFilter = document.getElementById("nftFilter").checked;
+
+                    const bullishFilter = document.getElementById("bullishFilter").checked;
+                    const bearishFilter = document.getElementById("bearishFilter").checked;
+                    const neutralFilter = document.getElementById("neutralFilter").checked;
+
+                    // Restructure the data to create a hierarchy
+                    const hierarchicalData = {
+                        name: "root",
+                        children: []
+                    };
+
+                    const categories = ["Currency", "Platform", "DeFi", "NFT"];
+
+                    categories.forEach(category => {
+                        const filteredByCategory = cryptoData.filter(d => d.category === category);
+                        const categorySentimentFiltered = filteredByCategory.filter(d =>
+                            (bullishFilter && d.sentiment === "bullish") ||
+                            (bearishFilter && d.sentiment === "bearish") ||
+                            (neutralFilter && d.sentiment === "neutral")
+                        );
+
+                        if ((category === "Currency" && currencyFilter) ||
+                            (category === "Platform" && platformFilter) ||
+                            (category === "DeFi" && defiFilter) ||
+                            (category === "NFT" && nftFilter)) {
+
+                            hierarchicalData.children.push({
+                                name: category,
+                                children: categorySentimentFiltered
+                            });
+                        }
+                    });
+
+
+                    const root = d3.hierarchy(hierarchicalData)
+                        .sum(d => d.marketCap)
+                        .sort((a, b) => b.value - a.value);
+
+                    const treemapLayout = d3.treemap()
+                        .size([width, height])
+                        .padding(1);
+
+                    treemapLayout(root);
+
+
+                    // Select all rectangles (cells + categories)
+                    const nodes = svg.selectAll("rect")
+                        .data(root.descendants(), d => d.data.symbol ? d.data.symbol : d.data.name); // Key function
+
+                    // Exit
+                    nodes.exit()
+                        .transition()
+                        .duration(300)
+                        .style("opacity", 0)
+                        .remove();
+
+                    // Enter
+                    const enterNodes = nodes.enter()
+                        .append("rect")
+                        .attr("x", d => d.x0)
+                        .attr("y", d => d.y0)
+                        .attr("width", d => d.x1 - d.x0)
+                        .attr("height", d => d.y1 - d.y0)
+                        .style("fill", d => {
+                            if (d.depth === 0) return "white"; // Root
+                            if (d.depth === 1) return "lightgray"; // Categories
+                            if (d.data.sentiment === "bullish") return "green";
+                            if (d.data.sentiment === "bearish") return "red";
+                            return "gray";
+                        })
+                        .style("stroke", "black")
+                        .style("stroke-width", 0.5)
+                        .style("opacity", 0); // Fade in
+
+
+                    // Enter + Update
+                    enterNodes.merge(nodes)
+                        .transition()
+                        .duration(300)
+                        .attr("x", d => d.x0)
+                        .attr("y", d => d.y0)
+                        .attr("width", d => d.x1 - d.x0)
+                        .attr("height", d => d.y1 - d.y0)
+                        .style("fill", d => {
+                            if (d.depth === 0) return "white"; // Root
+                            if (d.depth === 1) return "lightgray"; // Categories
+                            if (d.data.sentiment === "bullish") return "green";
+                            if (d.data.sentiment === "bearish") return "red";
+                            return "gray";
+                        })
+                        .style("opacity", 1);
+
+                    nodes.on("mouseover", (event, d) => {
+                            if (d.depth > 1) {
+                                tooltip.transition()
+                                    .duration(200)
+                                    .style("opacity", 0.9)
+                                    .style("display", "block");
+
+                                tooltip.html(`<b>${d.data.symbol}</b><br/>Market Cap: $${(d.data.marketCap / 1000000000).toFixed(2)} Billion`)
+                                    .style("left", (event.pageX + 10) + "px")
+                                    .style("top", (event.pageY - 28) + "px");
+                            }
+                        })
+                        .on("mousemove", (event) => {
+                            tooltip
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 28) + "px");
+                        })
+                        .on("mouseout", () => {
+                            tooltip.transition()
+                                .duration(500)
+                                .style("opacity", 0)
+                                .style("display", "none");
+                        });
+
+
+                    // Select all text elements
+                    const textNodes = svg.selectAll("text")
+                        .data(root.descendants().filter(d => d.depth < 3), d => d.data.symbol ? d.data.symbol : d.data.name);
+
+                    // Exit text
+                    textNodes.exit()
+                        .transition()
+                        .duration(300)
+                        .style("opacity", 0)
+                        .remove();
+
+                    // Enter text
+                    const enterTextNodes = textNodes.enter()
+                        .append("text")
+                        .attr("x", d => d.x0 + 5)
+                        .attr("y", d => d.y0 + (d.depth === 1 ? 20 : 15))  // Adjust vertical position
+                        .attr("font-size", d => d.depth === 1 ? "12px" : "10px") // Smaller font for coins
+                        .attr("fill", d => d.depth === 1 ? "black" : "white")
+                        .text(d => d.depth === 1 ? d.data.name : (d.data.symbol ? d.data.symbol : "")) // Category name or symbol
+                        .style("opacity", 0);
+
+                    // Enter + Update text
+                    enterTextNodes.merge(textNodes)
+                        .transition()
+                        .duration(300)
+                        .attr("x", d => d.x0 + 5)
+                        .attr("y", d => d.y0 + (d.depth === 1 ? 20 : 15))  // Adjust vertical position
+                        .attr("font-size", d => d.depth === 1 ? "12px" : "10px") // Smaller font for coins
+                        .attr("fill", d => d.depth === 1 ? "black" : "white")
+                        .text(d => d.depth === 1 ? d.data.name : (d.data.symbol ? d.data.symbol : "")) // Category name or symbol
+                        .style("opacity", 1);
+
+                }
+
+                // Attach Event listeners to filters
+                const filters = ["currencyFilter", "platformFilter", "defiFilter", "nftFilter", "bullishFilter", "bearishFilter", "neutralFilter"];
+                filters.forEach(filterId => {
+                    const filterElement = document.getElementById(filterId);
+                    if (filterElement) {
+                        filterElement.addEventListener("change", updateChart);
+                    } else {
+                        console.warn(`Filter element with ID '${filterId}' not found.`);
+                    }
+                });
+
+                // Initial chart draw
+                updateChart();
+
+                console.log("D3 script loaded");  // Helpful message
+            });
+        </script>
+    }
+</div>

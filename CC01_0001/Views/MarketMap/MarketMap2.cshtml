@@ -1,0 +1,74 @@
+﻿@* Views/Crypto/MarketMap.cshtml
+Version: 1.2
+(c) 2024, Minh Tri Tran - Licensed under CC BY 4.0
+https://creativecommons.org/licenses/by/4.0/
+*@
+
+@{
+    ViewData["Title"] = "Crypto Market Treemap";
+}
+
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+    <p>A treemap visualization of the cryptocurrency market.</p>
+
+    <!-- Category Filters -->
+    <div>
+        <label><input type="checkbox" id="currencyFilter" checked> Currency</label>
+        <label><input type="checkbox" id="platformFilter" checked> Platform</label>
+        <label><input type="checkbox" id="defiFilter" checked> DeFi</label>
+        <label><input type="checkbox" id="nftFilter" checked> NFT</label>
+    </div>
+
+    <!-- Sentiment Filters -->
+    <div>
+        <label><input type="checkbox" id="bullishFilter" checked> Bullish</label>
+        <label><input type="checkbox" id="bearishFilter" checked> Bearish</label>
+        <label><input type="checkbox" id="neutralFilter" checked> Neutral</label>
+    </div>
+
+    <div id="crypto-map"></div>
+
+    @section Styles {
+        <style>
+            #crypto-map {
+                width: 100%;
+                height: 600px;
+                border: 1px solid #ccc;
+                position: relative;
+                box-sizing: border-box;
+            }
+
+            .tooltip {
+                position: absolute;
+                background-color: white;
+                border: 1px solid black;
+                padding: 5px;
+                font-size: 12px;
+                pointer-events: none;
+                opacity: 0; /* Hidden by default */
+                transition: opacity 0.2s; /* Smooth fade-in effect */
+                z-index: 10; /* Ensure tooltip is above other elements */
+            }
+            /* Style for filter labels */
+            label {
+                margin-right: 10px;
+                cursor: pointer;
+            }
+
+            /* Style for checkbox inputs */
+            input[type="checkbox"] {
+                margin-right: 5px;
+            }
+        </style>
+    }
+
+    @section Scripts {
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+            const cryptoData = @Html.Raw(Json.Serialize(Model.CryptoData));
+        </script>
+
+        <script src="~/js/crypto_market_treemap.js"></script>  @* Adjust the path if needed *@
+    }
+</div>

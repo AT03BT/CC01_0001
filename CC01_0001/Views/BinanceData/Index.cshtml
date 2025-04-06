@@ -1,0 +1,38 @@
+﻿@* Views/Crypto/MarketMap2.cshtml
+    Version: 1.0.0
+    (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
+    https://creativecommons.org/licenses/by/4.0/
+*@
+@model List<CC01_0001.Models.BinanceTrade>
+
+@{
+    ViewData["Title"] = "Biannce Trade data";
+}
+<div class="container">
+    <h1>@ViewData["Title"]</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Trade ID</th>
+                <th>Symbol</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Trade Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var trade in Model)
+            {
+                <tr>
+                    <td>@trade.TradeId</td>
+                    <td>@trade.Symbol</td>
+                    <td>@trade.Price</td>
+                    <td>@trade.Quantity</td>
+                    <td>@trade.TradeTime</td>
+                </tr>
+            }
+        </tbody>
+</table>
+
+</div>
