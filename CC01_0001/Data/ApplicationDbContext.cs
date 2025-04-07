@@ -18,17 +18,17 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<BinanceExchangeRateLimits> BinanceExchangeRateLimits { get; set; }
     public DbSet<SymbolOrderType> SymbolOrderTypes { get; set; }
-    public DbSet<PermissionSetPermissions> PermissionSetPermissions { get; set; }
 
-    public DbSet<ExchangeUpdates> ExchangeUpdates { get; set; }
+    public DbSet<ExchangeUpdate> ExchangeUpdates { get; set; }
     public DbSet<ExchangeInfo> ExchangeInfos { get; set; }
-    public DbSet<MarketSettings> MarketSettingsSet { get; set; }
+    public DbSet<MarketSetup> MarketSetups { get; set; }
     public DbSet<RateLimit> RateLimits { get; set; }
     public DbSet<ExchangeFilter> ExchangeFilters { get; set; }
     public DbSet<OrderType> OrderTypes { get; set; }
     public DbSet<Filter> Filters { get; set; }
-    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<PermissionSetSpacer> PermissionSetSpacers { get; set; }
     public DbSet<PermissionSet> PermissionSets { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
 
     public DbSet<BinanceTrade> BinanceTrades { get; set; }
 
@@ -36,31 +36,52 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // DatabaseUpdate 1 to 1 ExchangeInfo
+        // ExchangeUpdate 1 to 1 ExchangeInfo
         modelBuilder.Entity<ExchangeInfo>()
-            .HasOne(ei => ei.ExchangeUpdates)
-            .WithOne(du => du.ExchangeInfo)
+            .HasOne(ei => ei.ExchangeUpdate)
+            .WithOne(eu => eu.ExchangeInfo)
             .HasForeignKey<ExchangeInfo>(ei => ei.ExchangeUpdateId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ExchangeInfo 1 to * MarketSettings
-        modelBuilder.Entity<MarketSettings>()
+        // ExchangeInfo 1 to * MarketSetup
+        modelBuilder.Entity<MarketSetup>()
             .HasOne(ms => ms.ExchangeInfo)
-            .WithMany(ei => ei.MarketSettings)
+            .WithMany(ei => ei.MarketSetups)
             .HasForeignKey(ms => ms.ExchangeInfoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // MarketSettings 1 to * PermissionSet
+        // MarketSetup 1 to * PermissionSetSpacer
+        modelBuilder.Entity<MarketSetup>()
+            .HasOne(ms => ms.ExchangeInfo)
+            .WithMany(ei => ei.MarketSetups)
+            .HasForeignKey(ms => ms.ExchangeInfoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ExchangeInfo 1 to * MarketSetup
+        modelBuilder.Entity<MarketSetup>()
+            .HasOne(ms => ms.ExchangeInfo)
+            .WithMany(ei => ei.MarketSetups)
+            .HasForeignKey(ms => ms.ExchangeInfoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // MarketSetup 1 to * Permission
         modelBuilder.Entity<PermissionSet>()
-            .HasOne(ps => ps.MarketSettings)
+            .HasOne(p => p.PermissionSetSpacer)
             .WithMany(ms => ms.PermissionSets)
-            .HasForeignKey(ps => ps.MarketSettingsId)
+            .HasForeignKey(p => p.PermissionSetSpacerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // MarketSetup 1 to * Permission
+        modelBuilder.Entity<Permission>()
+            .HasOne(p => p.PermissionSet)
+            .WithMany(ms => ms.Permissions)
+            .HasForeignKey(p => p.PermissionSetId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // One-to-many relationships
 
         modelBuilder.Entity<ExchangeFilter>()
-            .HasOne(ef => ef.BinanceExchangeInfo)
+            .HasOne(ef => ef.ExchangeInfo)
             .WithMany(bei => bei.ExchangeFilters)
             .HasForeignKey(ef => ef.BinanceExchangeInfoId);
 
@@ -84,29 +105,16 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(rl => rl.RateLimitId);
 
         modelBuilder.Entity<SymbolOrderType>()
-            .HasKey(ot => new { ot.MarketSettingsId, ot.OrderTypeId }); // Composite key
+            .HasKey(ot => new { ot.MarketSetupId, ot.OrderTypeId }); // Composite key
 
         modelBuilder.Entity<SymbolOrderType>()
-            .HasOne(ot => ot.marketSettings)
+            .HasOne(ot => ot.marketSetup)
             .WithMany(s => s.SymbolOrderTypes)
-            .HasForeignKey(ot => ot.MarketSettingsId);
+            .HasForeignKey(ot => ot.MarketSetupId);
 
         modelBuilder.Entity<SymbolOrderType>()
             .HasOne(ot => ot.OrderType)
             .WithMany(o => o.SymbolOrderTypes)
             .HasForeignKey(ot => ot.OrderTypeId);
-
-        modelBuilder.Entity<PermissionSetPermissions>()
-            .HasKey(ps => new { ps.PermissionSetId, ps.PermissionId }); // Composite key
-
-        modelBuilder.Entity<PermissionSetPermissions>()
-            .HasOne(ps => ps.PermissionSet)
-            .WithMany(s => s.PermissionSetPermissions)
-            .HasForeignKey(ps => ps.PermissionSetId);
-
-        modelBuilder.Entity<PermissionSetPermissions>()
-            .HasOne(ps => ps.Permission)
-            .WithMany(p => p.PermissionSetPermissions)
-            .HasForeignKey(ps => ps.PermissionId);
     }
 }

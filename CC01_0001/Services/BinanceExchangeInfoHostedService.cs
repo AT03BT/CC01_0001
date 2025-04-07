@@ -102,13 +102,13 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
     private void MakeUpdate(ApplicationDbContext dbContext, DateTime lastUpdate, string json)
     {
-        ExchangeUpdates updateInterval;
+        ExchangeUpdate updateInterval;
         byte[] byteBuffer;
         JsonReaderOptions readerOptions;
         Utf8JsonReader reader;
 
 
-        updateInterval = new ExchangeUpdates
+        updateInterval = new ExchangeUpdate
         {
             Timestamp = lastUpdate
         };
@@ -130,7 +130,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
 
 
-    private void ParseExchangeInfo(ApplicationDbContext dbContext, ExchangeUpdates exchangeUpdate, Utf8JsonReader reader)
+    private void ParseExchangeInfo(ApplicationDbContext dbContext, ExchangeUpdate exchangeUpdate, Utf8JsonReader reader)
     {
         ExchangeInfo exchangeInfo = new ExchangeInfo();
         exchangeUpdate.ExchangeInfo = exchangeInfo;
@@ -183,7 +183,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                 if (reader.TokenType == JsonTokenType.StartObject)
                 {
 
-                    MarketSettings marketSettings = new MarketSettings()
+                    MarketSetup marketSettings = new MarketSetup()
                     {
                         ExchangeInfo = exchangeInfo,
                     };
@@ -200,7 +200,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                             {
                                 case "permissionSets":
                                     reader.Read();
-                                    ParseMarketPermissionSets(dbContext, marketSettings, reader); // Changed marketSettings to cryptoCurrency
+                                    ParsePermissionSetSpacer(dbContext, marketSettings, reader); // Changed marketSettings to cryptoCurrency
                                     break;
                                 case "filters":
                                     var filters = JsonSerializer.Deserialize<List<Filter>>(ref reader, _jsonOptions);
@@ -373,7 +373,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
     }
 
 
-    private void ParseMarketOrderTypes(DbContext dbContext, MarketSettings marketSettings, Utf8JsonReader reader)
+    private void ParseMarketOrderTypes(DbContext dbContext, MarketSetup marketSetup, Utf8JsonReader reader)
     {
         reader.Read();
         if (reader.TokenType == JsonTokenType.StartArray)
@@ -393,16 +393,16 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                     // Create the join table entry
                     SymbolOrderType symbolOrderType = new SymbolOrderType
                     {
-                        marketSettings = marketSettings,
+                        marketSetup = marketSetup,
                         OrderType = orderType
                     };
 
                     // Add the join entry to the Symbol
-                    if (marketSettings.SymbolOrderTypes == null)
+                    if (marketSetup.SymbolOrderTypes == null)
                     {
-                        marketSettings.SymbolOrderTypes = new List<SymbolOrderType>();
+                        marketSetup.SymbolOrderTypes = new List<SymbolOrderType>();
                     }
-                    marketSettings.SymbolOrderTypes.Add(symbolOrderType);
+                    marketSetup.SymbolOrderTypes.Add(symbolOrderType);
                 }
                 else if (reader.TokenType == JsonTokenType.EndArray)
                 {
@@ -413,10 +413,10 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
     }
 
 
-    private void ParseMarketPermissionSets(ApplicationDbContext dbContext, MarketSettings marketSettings, Utf8JsonReader reader)
+    private void ParsePermissionSetSpacer(ApplicationDbContext dbContext, MarketSetup marketSetup, Utf8JsonReader reader)
     {
         JsonTokenType tokenType;
-        List<PermissionSet> permissionSets = new List<PermissionSet>();
+        PermissionSetSpacer permissionSetSpacer = new PermissionSetSpacer();
 
         tokenType = reader.TokenType;
         while (reader.Read())
@@ -425,8 +425,9 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
             tokenType = reader.TokenType;
             if (tokenType == JsonTokenType.StartArray)
             {
-                marketSettings.PermissionSets = permissionSets;
-                ParsePermissionSet(dbContext, permissionSets, reader);
+                marketSetup.PermissionSetSpacer = permissionSetSpacer;
+                dbContext.PermissionSetSpacers.Add(permissionSetSpacer);
+                ParsePermissionSet(dbContext, permissionSetSpacer, reader);
 
             }
             else if (tokenType == JsonTokenType.EndArray)
@@ -438,16 +439,16 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
         }
     }
 
-    private void ParsePermissionSet(ApplicationDbContext dbContext, ICollection<PermissionSet> permissionSets, Utf8JsonReader reader)
+    private void ParsePermissionSet(ApplicationDbContext dbContext, PermissionSetSpacer permissionSetSpacer, Utf8JsonReader reader)
     {
         JsonTokenType tokenType;
         PermissionSet permissionSet = new PermissionSet();
 
-
         tokenType = reader.TokenType;
         if (tokenType == JsonTokenType.StartArray)
         {
-            permissionSets.Add(permissionSet);
+            dbContext.PermissionSets.Add(permissionSet);
+            permissionSetSpacer.PermissionSets.Add(permissionSet);
         }
         while (reader.Read())
         {
@@ -456,23 +457,13 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
             if (tokenType == JsonTokenType.String)
             {
 
-                var permissionTag = reader.GetString(); // Corrected variable name
+                var permissionTag = reader.GetString();
 
                 Permission permission = new Permission { PermissionTag = permissionTag };
-
-                // Create the join table entry
-                PermissionSetPermissions permissionSetPermission = new PermissionSetPermissions
-                {
-                    PermissionSet = permissionSet,
-                    Permission = permission
-                };
-
-                permissionSet.PermissionSetPermissions.Add(permissionSetPermission); // Add to the PermissionSet
+                permissionSet.Permissions.Add(permission);
             }
             else if (tokenType == JsonTokenType.EndArray)
             {
-                permissionSets.Add(permissionSet); // Add the PermissionSet to the list
-                dbContext.PermissionSets.Add(permissionSet); // Add to the DbContext
                 // End of permissionSet array
                 dbContext.SaveChanges();
                 break;

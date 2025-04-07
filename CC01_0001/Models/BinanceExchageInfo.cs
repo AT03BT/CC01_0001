@@ -11,16 +11,15 @@ using System.Text.Json.Serialization;
 
 namespace CC01_0001.Models;
 
-public class ExchangeUpdates
+public class ExchangeUpdate
 {
     [Key]
     public int Id { get; set; }
     public DateTime Timestamp { get; set; }
 
     public ExchangeInfo ExchangeInfo { get; set; }
-    public ICollection<MarketSettings> MarketSettingsSet { get; set; }
+    public ICollection<MarketSetup> MarketSetups { get; set; }
 }
-
 
 public class ExchangeInfo
 {
@@ -31,21 +30,20 @@ public class ExchangeInfo
     public long? ServerTime { get; set; }
 
     public int ExchangeUpdateId { get; set; }
-    public ExchangeUpdates ExchangeUpdates { get; set; }
+    public ExchangeUpdate ExchangeUpdate { get; set; }
 
     public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; }
     public List<ExchangeFilter>? ExchangeFilters { get; set; }
-    public ICollection<MarketSettings> MarketSettings { get; set; }
+    public ICollection<MarketSetup> MarketSetups { get; set; }
 }
 
-
-public class MarketSettingsPermissionSets
+public class MarketSetupPermissionSets
 {
     [Key]
     public int Id { get; set; }
 }
 
-public class MarketSettings
+public class MarketSetup
 {
     [Key]
     public int Id { get; set; }
@@ -71,14 +69,13 @@ public class MarketSettings
     public int ExchangeInfoId { get; set; } // Foreign key
     public ExchangeInfo ExchangeInfo { get; set; }
 
-    public int DatabaseUpdateId { get; set; }
-    public ExchangeUpdates DatabaseUpdate { get; set; }
+    public int ExchangeUpdateId { get; set; }
+    public ExchangeUpdate ExchangeUpdate { get; set; }
 
     public List<SymbolOrderType>? SymbolOrderTypes { get; set; } = new List<SymbolOrderType>();
     public List<Filter>? Filters { get; set; } = new List<Filter>();
-    public ICollection<PermissionSet> PermissionSets { get; set; }
+    public PermissionSetSpacer PermissionSetSpacer { get; set; }
 }
-
 
 public class RateLimit
 {
@@ -92,7 +89,6 @@ public class RateLimit
     public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; } = new List<BinanceExchangeRateLimits>();
 }
 
-
 public class BinanceExchangeRateLimits
 {
     [Key]
@@ -104,7 +100,6 @@ public class BinanceExchangeRateLimits
     public ExchangeInfo? BinanceExchange { get; set; }
 }
 
-
 public class OrderType
 {
     [Key]
@@ -114,18 +109,16 @@ public class OrderType
     public List<SymbolOrderType>? SymbolOrderTypes { get; set; } = new List<SymbolOrderType>();
 }
 
-
 public class SymbolOrderType
 {
     [Key]
-    public int MarketSettingsId { get; set; }
-    public MarketSettings marketSettings { get; set; }
+    public int MarketSetupId { get; set; }
+    public MarketSetup marketSetup { get; set; }
 
     [Key]
     public int OrderTypeId { get; set; }
     public OrderType OrderType { get; set; }
 }
-
 
 public class Filter
 {
@@ -140,43 +133,41 @@ public class Filter
     public string? StepSize { get; set; }
 
     public int? SymbolId { get; set; }
-    public MarketSettings? Symbol { get; set; }
+    public MarketSetup? Symbol { get; set; }
 }
 
+public class PermissionSetSpacer
+{
+    [Key]
+    public int Id { get; set; }
+    public int MarketSetupId { get; set; } // Foreign key
+
+    public MarketSetup MarketSetup { get; set; } // Navigation property
+    public ICollection<PermissionSet> PermissionSets { get; set; } = new List<PermissionSet>(); // Updated
+}
 
 public class PermissionSet
 {
     [Key]
     public int Id { get; set; }
-    public ICollection<PermissionSetPermissions> PermissionSetPermissions { get; set; }
 
-    public int MarketSettingsId { get; set; } // Foreign key
-    public MarketSettings MarketSettings { get; set; } // Navigation property
+    public int PermissionSetSpacerId { get; set; }
+    public PermissionSetSpacer PermissionSetSpacer { get; set; } 
+
+    public ICollection<Permission> Permissions { get; set; } = new List<Permission>(); 
 }
-
 
 public class Permission
 {
     [Key]
     public int Id { get; set; }
+    public int PermissionSetId { get; set; }
+
+    public PermissionSet PermissionSet { get; set; }
     public string PermissionTag { get; set; }
     public string? Description { get; set; }
 
-    public ICollection<PermissionSetPermissions> PermissionSetPermissions { get; set; }
 }
-
-
-public class PermissionSetPermissions
-{
-    [Key]
-    public int PermissionSetId { get; set; } // Foreign key
-    public PermissionSet PermissionSet { get; set; }
-
-    [Key]
-    public int PermissionId { get; set; } // Foreign key
-    public Permission Permission { get; set; }
-}
-
 
 public class ExchangeFilter
 {
@@ -184,5 +175,5 @@ public class ExchangeFilter
     public int Id { get; set; }
     // Add properties for exchange filters if needed
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public ExchangeInfo BinanceExchangeInfo { get; set; }
+    public ExchangeInfo ExchangeInfo { get; set; }
 }
