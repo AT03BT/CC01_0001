@@ -15,11 +15,12 @@ public class UpdateInterval
 {
     [Key]
     public int Id { get; set; }
-    public DateTime Timestamp { get; set; }
 
-    public ICollection<ExchangeInfo> ExchangeInfos { get; set; } = new List<ExchangeInfo>();
-    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; } = new List<CryptoCurrency>();
-    public ICollection<MarketSettings> MarketSettingsSet { get; set; } = new List<MarketSettings>();
+    public ICollection<ExchangeInfo> ExchangeInfos { get; set; }
+    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; }
+    public ICollection<MarketSettings> MarketSettingsSet { get; set; }
+
+    public DateTime Timestamp { get; set; }
 }
 
 
@@ -31,19 +32,18 @@ public class UpdateInterval
 public class ExchangeInfo
 {
     [Key]
-    public int Id { get; set; } 
-    public DateTime Timestamp { get; set; } 
+    public int Id { get; set; }
+    public DateTime Timestamp { get; set; }
     public string? Timezone { get; set; }
     public long? ServerTime { get; set; }
 
     public int UpdateIntervalId { get; set; }
     public UpdateInterval UpdateInterval { get; set; }
 
-    public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; } = new List<BinanceExchangeRateLimits>();
+    public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; }
     public List<ExchangeFilter>? ExchangeFilters { get; set; }
-    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; } = new List<CryptoCurrency>();
+    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; }
 }
-
 
 public class CryptoCurrency
 {
@@ -73,7 +73,7 @@ public class CurrencySymbol
     public string Symbol { get; set; }
 
     public int CryptoCurrencyId { get; set; }
-    public CryptoCurrency CryptoCurrency { get; set; }
+    public ICollection<CryptoCurrency> CryptoCurrency { get; set; }
 }
 
 
@@ -82,24 +82,25 @@ public class MarketSettings
     [Key]
     public int Id { get; set; }
 
-    public string Status { get; set; }
-    public string BaseAsset { get; set; }
-    public int BaseAssetPrecision { get; set; }
-    public string QuoteAsset { get; set; }
-    public int QuotePrecision { get; set; }
-    public int QuoteAssetPrecision { get; set; }
-    public int BaseCommissionPrecision { get; set; }
-    public int QuoteCommissionPrecision { get; set; }
-    public bool IcebergAllowed { get; set; }
-    public bool OcoAllowed { get; set; }
-    public bool OtoAllowed { get; set; }
-    public bool QuoteOrderQtyMarketAllowed { get; set; }
-    public bool AllowTrailingStop { get; set; }
-    public bool CancelReplaceAllowed { get; set; }
-    public bool IsSpotTradingAllowed { get; set; }
-    public bool IsMarginTradingAllowed { get; set; }
-    public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public ExchangeInfo? BinanceExchangeInfo { get; set; }
+    public string? Status { get; set; }
+    public string? BaseAsset { get; set; }
+    public int? BaseAssetPrecision { get; set; }
+    public string? QuoteAsset { get; set; }
+    public int? QuotePrecision { get; set; }
+    public int? QuoteAssetPrecision { get; set; }
+    public int? BaseCommissionPrecision { get; set; }
+    public int? QuoteCommissionPrecision { get; set; }
+    public bool? IcebergAllowed { get; set; }
+    public bool? OcoAllowed { get; set; }
+    public bool? OtoAllowed { get; set; }
+    public bool? QuoteOrderQtyMarketAllowed { get; set; }
+    public bool? AllowTrailingStop { get; set; }
+    public bool? CancelReplaceAllowed { get; set; }
+    public bool? IsSpotTradingAllowed { get; set; }
+    public bool? IsMarginTradingAllowed { get; set; }
+
+    public int ExchangeInfoId { get; set; } // Foreign key
+    public ExchangeInfo ExchangeInfo { get; set; }
 
     public int UpdateIntervalId { get; set; }
     public UpdateInterval UpdateInterval { get; set; }

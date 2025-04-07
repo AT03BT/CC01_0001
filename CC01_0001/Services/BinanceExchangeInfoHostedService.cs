@@ -130,23 +130,12 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
 
 
-    /* ParseExchangeInfo
-     * -----------------
-     * 
-     * 
-     *
-     */
     private void ParseExchangeInfo(ApplicationDbContext dbContext, UpdateInterval updateInterval, Utf8JsonReader reader)
     {
-
-        ExchangeInfo exchangeInfo;
-        
-        
-        exchangeInfo = new ExchangeInfo();
+        ExchangeInfo exchangeInfo = new ExchangeInfo();
         updateInterval.ExchangeInfos.Add(exchangeInfo);
         dbContext.ExchangeInfos.Add(exchangeInfo);
-        dbContext.SaveChanges();
-
+        dbContext.SaveChanges(); // Save ExchangeInfo and UpdateInterval
 
         while (reader.Read())
         {
@@ -160,12 +149,8 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                         switch (propertyName)
                         {
                             case "symbols":
-                                ParseSymbols(dbContext, exchangeInfo, reader);
+                                ParseSymbols(dbContext, exchangeInfo, updateInterval, reader); // Pass updateInterval
                                 break;
-                            //case "exchangeFilters":
-                            //    var exchangeFilters = JsonSerializer.Deserialize<List<ExchangeFilter>>(ref reader, _jsonOptions);
-                            //    exchangeInfo.ExchangeFilters = exchangeFilters;
-                            //    break;
                             case "rateLimits":
                                 ParseRateLimits(dbContext, exchangeInfo, reader);
                                 break;
@@ -180,14 +165,166 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                                 dbContext.SaveChanges();
                                 break;
                         }
+                        break;
                     }
-                    break;
                 default:
-
                     break;
             }
         }
+    }
 
+    private void ParseSymbols(ApplicationDbContext dbContext, ExchangeInfo exchangeInfo, UpdateInterval updateInterval, Utf8JsonReader reader) // Added updateInterval
+    {
+        reader.Read();
+        if (reader.TokenType == JsonTokenType.StartArray)
+        {
+            while (reader.Read() && reader.TokenType != JsonTokenType.EndArray)
+            {
+                if (reader.TokenType == JsonTokenType.StartObject)
+                {
+                    CryptoCurrency cryptoCurrency = new CryptoCurrency();
+
+
+                    cryptoCurrency.UpdateInterval = updateInterval;
+                    cryptoCurrency.ExchangeInfo = exchangeInfo;
+
+                    updateInterval.CryptoCurrencies.Add(cryptoCurrency); // Add to UpdateInterval
+                    exchangeInfo.CryptoCurrencies.Add(cryptoCurrency); // Add to ExchangeInfo
+
+                    MarketSettings marketSettings = new MarketSettings(); // Create MarketSettings
+                    marketSettings.UpdateInterval = updateInterval; // Associate with UpdateInterval
+                    marketSettings.ExchangeInfo = exchangeInfo; // Associate with ExchangeInfo
+                    marketSettings.CryptoCurrency = cryptoCurrency; // Associate with CryptoCurrency
+                    cryptoCurrency.MarketSettings = marketSettings; // Associate with CryptoCurrency
+
+
+                    dbContext.MarketSettingsSet.Add(marketSettings); // Add to DbContext
+                    dbContext.CryptoCurrencies.Add(cryptoCurrency);
+
+                    while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
+                    {
+                        if (reader.TokenType == JsonTokenType.PropertyName)
+                        {
+                            string? propertyName = reader.GetString();
+
+                            switch (propertyName)
+                            {
+                                case "permissionSets":
+                                    reader.Read();
+                                    ParseMarketPermissionSets(dbContext, marketSettings, reader); // Changed marketSettings to cryptoCurrency
+                                    break;
+                                case "filters":
+                                    var filters = JsonSerializer.Deserialize<List<Filter>>(ref reader, _jsonOptions);
+                                    marketSettings.Filters = filters;
+                                    break;
+                                case "isMarginTradingAllowed":
+                                    reader.Read();
+                                    //marketSettings.IsMarginTradingAllowed = reader.GetBoolean();
+                                    break;
+                                case "isSpotTradingAllowed":
+                                    reader.Read();
+                                    //marketSettings.IsSpotTradingAllowed = reader.GetBoolean();
+                                    break;
+                                case "cancelReplaceAllowed":
+                                    reader.Read();
+                                    //marketSettings.CancelReplaceAllowed = reader.GetBoolean();
+                                    break;
+                                case "allowTrailingStop":
+                                    reader.Read();
+                                    //marketSettings.AllowTrailingStop = reader.GetBoolean();
+                                    break;
+                                case "quoteOrderQtyMarketAllowed":
+                                    reader.Read();
+                                    //marketSettings.QuoteOrderQtyMarketAllowed = reader.GetBoolean();
+                                    break;
+                                case "otoAllowed":
+                                    reader.Read();
+                                    //marketSettings.OtoAllowed = reader.GetBoolean();
+                                    break;
+                                case "ocoAllowed":
+                                    reader.Read();
+                                    //marketSettings.OcoAllowed = reader.GetBoolean();
+                                    break;
+                                case "icebergAllowed":
+                                    reader.Read();
+                                    //marketSettings.IcebergAllowed = reader.GetBoolean();
+                                    break;
+                                case "orderTypes":
+                                    reader.Read();
+                                    //ParseMarketOrderTypes(dbContext, marketSettings, reader);
+                                    break;
+                                case "quoteCommissionPrecision":
+                                    reader.Read();
+                                    //marketSettings.QuoteCommissionPrecision = reader.GetInt32();
+                                    break;
+                                case "baseCommissionPrecision":
+                                    reader.Read();
+                                    //marketSettings.BaseCommissionPrecision = reader.GetInt32();
+                                    break;
+                                case "quoteAssetPrecision":
+                                    reader.Read();
+                                    //marketSettings.QuoteAssetPrecision = reader.GetInt32();
+                                    break;
+                                case "quotePrecision":
+                                    reader.Read();
+                                    //marketSettings.QuotePrecision = reader.GetInt32();
+                                    break;
+                                case "quoteAsset":
+                                    reader.Read();
+                                    //marketSettings.QuoteAsset = reader.GetString();
+                                    break;
+                                case "baseAssetPrecision":
+                                    reader.Read();
+                                    //marketSettings.BaseAssetPrecision = reader.GetInt32();
+                                    break;
+                                case "baseAsset":
+                                    reader.Read();
+                                    //marketSettings.BaseAsset = reader.GetString();
+                                    break;
+                                case "status":
+                                    reader.Read();
+                                    //marketSettings.Status = reader.GetString();
+                                    break;
+                                case "symbol":
+                                    reader.Read();
+                                    String? symbol = reader.GetString();
+                                    if (symbol != null)
+                                    {
+                                        CurrencySymbol? symbol2 = dbContext.CurrencySymbols.FirstOrDefault(cs => cs.Symbol == symbol);
+                                        if (symbol2 == null)
+                                        {
+                                            symbol2 = new CurrencySymbol { Symbol = symbol };
+                                            cryptoCurrency.CurrencySymbol = symbol2; // Set the CurrencySymbol property
+                                            dbContext.CurrencySymbols.Add(symbol2);
+                                            dbContext.SaveChanges(); // Save CurrencySymbol
+                                        }
+                                        else
+                                        {
+                                            cryptoCurrency.CurrencySymbol = symbol2;
+                                            dbContext.SaveChanges(); // Save CurrencySymbol
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _logger.LogWarning("Symbol is null.");
+                                    }
+                                    break;
+                            }
+                        }
+                        else if (reader.TokenType == JsonTokenType.EndObject)
+                        {
+                            dbContext.SaveChanges(); // Save each CryptoCurrency
+                            break;
+                        }
+                    }
+                }
+                else if (reader.TokenType == JsonTokenType.EndArray)
+                {
+                    break;
+                }
+            }
+        }
+        dbContext.SaveChanges(); // Save any remaining changes
     }
 
     private void ParseRateLimits(ApplicationDbContext dbContext, ExchangeInfo exchangeInfo, Utf8JsonReader reader)
@@ -264,175 +401,6 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
             }
             dbContext.SaveChanges(); // Save BinanceExchangeRateLimits
         }
-    }
-
-
-    private void ParseSymbols(ApplicationDbContext dbContext, ExchangeInfo exchangeInfo, Utf8JsonReader reader)
-    {
-
-        var setName = reader.GetString();
-        ICollection<CryptoCurrency> cryptoCurrencies = exchangeInfo.CryptoCurrencies;
-
-
-        reader.Read();
-        var tokenType = reader.TokenType; 
-        if (tokenType == JsonTokenType.StartArray)
-        {
-
-            CryptoCurrency cryptoCurrency;
-            MarketSettings marketSettings;
-
-
-            while (reader.Read())
-            {
-                // Parse Symbol
-                cryptoCurrency = new CryptoCurrency();
-                marketSettings = cryptoCurrency.MarketSettings;
-
-                cryptoCurrencies.Add(cryptoCurrency);
-
-
-                if (reader.TokenType == JsonTokenType.StartObject)
-                {
-                    // Parse Properties
-                    while (reader.Read())
-                    {
-                        var tokenType2 = reader.TokenType;
-                        if (tokenType2 == JsonTokenType.PropertyName)
-                        {
-                            string? propertyName = reader.GetString();
-
-                            switch (propertyName)
-                            {
-                                case "permissionSets":
-                                    reader.Read();
-                                    ParseMarketPermissionSets(dbContext, marketSettings, reader);
-                                    break;
-                                case "filters":
-                                    var filters = JsonSerializer.Deserialize<List<Filter>>(ref reader, _jsonOptions);
-                                    marketSettings.Filters = filters;
-                                    break;
-                                case "isMarginTradingAllowed":
-                                    reader.Read();
-                                    marketSettings.IsMarginTradingAllowed = reader.GetBoolean();
-                                    break;
-                                case "isSpotTradingAllowed":
-                                    reader.Read();
-                                    marketSettings.IsSpotTradingAllowed = reader.GetBoolean();
-                                    break;
-                                case "cancelReplaceAllowed":
-                                    reader.Read();
-                                    marketSettings.CancelReplaceAllowed = reader.GetBoolean();
-                                    break;
-                                case "allowTrailingStop":
-                                    reader.Read();
-                                    marketSettings.AllowTrailingStop = reader.GetBoolean();
-                                    break;
-                                case "quoteOrderQtyMarketAllowed":
-                                    reader.Read();
-                                    marketSettings.QuoteOrderQtyMarketAllowed = reader.GetBoolean();
-                                    break;
-                                case "otoAllowed":
-                                    reader.Read();
-                                    marketSettings.OtoAllowed = reader.GetBoolean();
-                                    break;
-                                case "ocoAllowed":
-                                    reader.Read();
-                                    marketSettings.OcoAllowed = reader.GetBoolean();
-                                    break;
-                                case "icebergAllowed":
-                                    reader.Read();
-                                    marketSettings.IcebergAllowed = reader.GetBoolean();
-                                    break;
-                                case "orderTypes":
-                                    ParseMarketOrderTypes(dbContext, marketSettings, reader);
-                                    break;
-                                case "quoteCommissionPrecision":
-                                    reader.Read();
-                                    marketSettings.QuoteCommissionPrecision = reader.GetInt32();
-                                    break;
-                                case "baseCommissionPrecision":
-                                    reader.Read();
-                                    marketSettings.BaseCommissionPrecision = reader.GetInt32();
-                                    break;
-                                case "quoteAssetPrecision":
-                                    reader.Read();
-                                    marketSettings.QuoteAssetPrecision = reader.GetInt32();
-                                    break;
-                                case "quotePrecision":
-                                    reader.Read();
-                                    marketSettings.QuotePrecision = reader.GetInt32();
-                                    break;
-                                case "quoteAsset":
-                                    reader.Read();
-                                    marketSettings.QuoteAsset = reader.GetString();
-                                    break;
-                                case "baseAssetPrecision":
-                                    reader.Read();
-                                    marketSettings.BaseAssetPrecision = reader.GetInt32();
-                                    break;
-                                case "baseAsset":
-                                    reader.Read();
-                                    marketSettings.BaseAsset = reader.GetString();
-                                    break;
-                                case "status":
-                                    reader.Read();
-                                    marketSettings.Status = reader.GetString();
-                                    break;
-                                case "symbol":
-                                    reader.Read();
-                                    String? symbol = reader.GetString();
-                                    if (symbol != null)
-                                    {
-                                        // lookup if symbol exists.
-                                        CurrencySymbol? symbol2 = dbContext.CurrencySymbols.FirstOrDefault(cs => cs.Symbol == symbol);
-                                        if (symbol2 == null)
-                                        {
-                                            symbol2 = new CurrencySymbol { Symbol = symbol };
-                                            dbContext.CurrencySymbols.Add(symbol2);
-                                        }
-                                        cryptoCurrency.CurrencySymbol = symbol2;
-                                        dbContext.SaveChanges();
-                                    }
-                                    else
-                                    {
-                                        // Handle the case where the symbol is null
-                                        _logger.LogWarning("Symbol is null.");
-                                    }
-                                    break;
-                            }
-                        }
-                        else if (reader.TokenType == JsonTokenType.EndObject)
-                        {
-                            dbContext.SaveChanges();
-                            break;
-                        }
-                    }
-
-
-                }
-                else if (reader.TokenType == JsonTokenType.EndArray)
-                {
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // Handle the case where the expected token type is not found
-        }
-
-        reader.Read();
-        if (reader.TokenType == JsonTokenType.EndArray)
-        {
-            // End of symbols array
-            dbContext.SaveChanges();
-        }
-        else
-        {
-            // Handle the case where the expected token type is not found
-        }
-
     }
 
 
@@ -538,6 +506,8 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                 if (permissionSet != null) // Check if a PermissionSet was created
                 {
                     permissionSets.Add(permissionSet); // Add the PermissionSet to the list
+                    dbContext.PermissionSets.Add(permissionSet); // Add to the DbContext
+                    dbContext.SaveChanges(); // Save the PermissionSet
                 }
                 break;
             }

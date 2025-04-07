@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CC01_0001.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250407105415_InitialCreate")]
+    [Migration("20250407121723_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -191,8 +191,7 @@ namespace CC01_0001.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrencySymbolId")
-                        .IsUnique();
+                    b.HasIndex("CurrencySymbolId");
 
                     b.HasIndex("ExchangeInfoId");
 
@@ -313,61 +312,58 @@ namespace CC01_0001.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AllowTrailingStop")
+                    b.Property<bool?>("AllowTrailingStop")
                         .HasColumnType("bit");
 
                     b.Property<string>("BaseAsset")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("BaseAssetPrecision")
+                    b.Property<int?>("BaseAssetPrecision")
                         .HasColumnType("int");
 
-                    b.Property<int>("BaseCommissionPrecision")
+                    b.Property<int?>("BaseCommissionPrecision")
                         .HasColumnType("int");
 
-                    b.Property<int>("BinanceExchangeInfoId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("CancelReplaceAllowed")
+                    b.Property<bool?>("CancelReplaceAllowed")
                         .HasColumnType("bit");
 
                     b.Property<int>("CryptoCurrencyId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IcebergAllowed")
+                    b.Property<int>("ExchangeInfoId")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("IcebergAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsMarginTradingAllowed")
+                    b.Property<bool?>("IsMarginTradingAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsSpotTradingAllowed")
+                    b.Property<bool?>("IsSpotTradingAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("OcoAllowed")
+                    b.Property<bool?>("OcoAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("OtoAllowed")
+                    b.Property<bool?>("OtoAllowed")
                         .HasColumnType("bit");
 
                     b.Property<string>("QuoteAsset")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("QuoteAssetPrecision")
+                    b.Property<int?>("QuoteAssetPrecision")
                         .HasColumnType("int");
 
-                    b.Property<int>("QuoteCommissionPrecision")
+                    b.Property<int?>("QuoteCommissionPrecision")
                         .HasColumnType("int");
 
-                    b.Property<bool>("QuoteOrderQtyMarketAllowed")
+                    b.Property<bool?>("QuoteOrderQtyMarketAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("QuotePrecision")
+                    b.Property<int?>("QuotePrecision")
                         .HasColumnType("int");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UpdateIntervalId")
@@ -375,10 +371,10 @@ namespace CC01_0001.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BinanceExchangeInfoId");
-
                     b.HasIndex("CryptoCurrencyId")
                         .IsUnique();
+
+                    b.HasIndex("ExchangeInfoId");
 
                     b.HasIndex("UpdateIntervalId");
 
@@ -672,8 +668,8 @@ namespace CC01_0001.Migrations
             modelBuilder.Entity("CC01_0001.Models.CryptoCurrency", b =>
                 {
                     b.HasOne("CC01_0001.Models.CurrencySymbol", "CurrencySymbol")
-                        .WithOne("CryptoCurrency")
-                        .HasForeignKey("CC01_0001.Models.CryptoCurrency", "CurrencySymbolId")
+                        .WithMany("CryptoCurrency")
+                        .HasForeignKey("CurrencySymbolId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -729,15 +725,15 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
                 {
-                    b.HasOne("CC01_0001.Models.ExchangeInfo", "BinanceExchangeInfo")
-                        .WithMany()
-                        .HasForeignKey("BinanceExchangeInfoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CC01_0001.Models.CryptoCurrency", "CryptoCurrency")
                         .WithOne("MarketSettings")
                         .HasForeignKey("CC01_0001.Models.MarketSettings", "CryptoCurrencyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
+                        .WithMany()
+                        .HasForeignKey("ExchangeInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -747,9 +743,9 @@ namespace CC01_0001.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("BinanceExchangeInfo");
-
                     b.Navigation("CryptoCurrency");
+
+                    b.Navigation("ExchangeInfo");
 
                     b.Navigation("UpdateInterval");
                 });
@@ -858,8 +854,7 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.CurrencySymbol", b =>
                 {
-                    b.Navigation("CryptoCurrency")
-                        .IsRequired();
+                    b.Navigation("CryptoCurrency");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.ExchangeInfo", b =>

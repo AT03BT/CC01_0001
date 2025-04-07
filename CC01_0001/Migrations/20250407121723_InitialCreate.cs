@@ -355,23 +355,23 @@ namespace CC01_0001.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BaseAsset = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BaseAssetPrecision = table.Column<int>(type: "int", nullable: false),
-                    QuoteAsset = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    QuotePrecision = table.Column<int>(type: "int", nullable: false),
-                    QuoteAssetPrecision = table.Column<int>(type: "int", nullable: false),
-                    BaseCommissionPrecision = table.Column<int>(type: "int", nullable: false),
-                    QuoteCommissionPrecision = table.Column<int>(type: "int", nullable: false),
-                    IcebergAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    OcoAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    OtoAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    QuoteOrderQtyMarketAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    AllowTrailingStop = table.Column<bool>(type: "bit", nullable: false),
-                    CancelReplaceAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    IsSpotTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    IsMarginTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    BinanceExchangeInfoId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BaseAsset = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BaseAssetPrecision = table.Column<int>(type: "int", nullable: true),
+                    QuoteAsset = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    QuotePrecision = table.Column<int>(type: "int", nullable: true),
+                    QuoteAssetPrecision = table.Column<int>(type: "int", nullable: true),
+                    BaseCommissionPrecision = table.Column<int>(type: "int", nullable: true),
+                    QuoteCommissionPrecision = table.Column<int>(type: "int", nullable: true),
+                    IcebergAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    OcoAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    OtoAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    QuoteOrderQtyMarketAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    AllowTrailingStop = table.Column<bool>(type: "bit", nullable: true),
+                    CancelReplaceAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    IsSpotTradingAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    IsMarginTradingAllowed = table.Column<bool>(type: "bit", nullable: true),
+                    ExchangeInfoId = table.Column<int>(type: "int", nullable: false),
                     UpdateIntervalId = table.Column<int>(type: "int", nullable: false),
                     CryptoCurrencyId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -385,8 +385,8 @@ namespace CC01_0001.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_MarketSettingsSet_ExchangeInfos_BinanceExchangeInfoId",
-                        column: x => x.BinanceExchangeInfoId,
+                        name: "FK_MarketSettingsSet_ExchangeInfos_ExchangeInfoId",
+                        column: x => x.ExchangeInfoId,
                         principalTable: "ExchangeInfos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -536,8 +536,7 @@ namespace CC01_0001.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_CryptoCurrencies_CurrencySymbolId",
                 table: "CryptoCurrencies",
-                column: "CurrencySymbolId",
-                unique: true);
+                column: "CurrencySymbolId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CryptoCurrencies_ExchangeInfoId",
@@ -565,15 +564,15 @@ namespace CC01_0001.Migrations
                 column: "SymbolId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketSettingsSet_BinanceExchangeInfoId",
-                table: "MarketSettingsSet",
-                column: "BinanceExchangeInfoId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_MarketSettingsSet_CryptoCurrencyId",
                 table: "MarketSettingsSet",
                 column: "CryptoCurrencyId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MarketSettingsSet_ExchangeInfoId",
+                table: "MarketSettingsSet",
+                column: "ExchangeInfoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MarketSettingsSet_UpdateIntervalId",

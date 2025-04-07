@@ -71,14 +71,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasForeignKey(cc => cc.ExchangeInfoId)
             .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
 
-        // CryptoCurrency 1 to 1 Symbol
+        // CurrencySymbol 1 to * CryptoCurrency
         modelBuilder.Entity<CryptoCurrency>()
             .HasOne(cc => cc.CurrencySymbol)
-            .WithOne(cs => cs.CryptoCurrency)
-            .HasForeignKey<CryptoCurrency>(cc => cc.CurrencySymbolId)
+            .WithMany(cs => cs.CryptoCurrency)
+            .HasForeignKey(cs => cs.CurrencySymbolId)
             .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
 
-        // CryptoCurrency 1 to * MarketConfiguration
+        // CryptoCurrency 1 to 1 MarketSettings
         modelBuilder.Entity<MarketSettings>()
             .HasOne(mc => mc.CryptoCurrency)
             .WithOne(cc => cc.MarketSettings)
