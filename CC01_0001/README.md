@@ -51,4 +51,4 @@ dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore -v 8.*
 dotnet aspnet-codegenerator identity -dc CC01_0001.Data.ApplicationDbContext --files "Account.Register;Account.Login;Account.Logout;Account.Manage.Index;Account.Manage.ChangePassword;Account.Manage.Email;Account.Manage.TwoFactorAuthentication;Account.Manage.ExternalLogins"
 
 dotnet ef migrations add InitialCreate
-dotnet ef database update
+ 

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CC01_0001.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250407121723_InitialCreate")]
+    [Migration("20250407191106_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -166,60 +166,6 @@ namespace CC01_0001.Migrations
                     b.ToTable("BinanceTrades");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.CryptoCurrency", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CurrencySymbolId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExchangeInfoId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MarketSettingsId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UpdateIntervalId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CurrencySymbolId");
-
-                    b.HasIndex("ExchangeInfoId");
-
-                    b.HasIndex("UpdateIntervalId");
-
-                    b.ToTable("CryptoCurrencies");
-                });
-
-            modelBuilder.Entity("CC01_0001.Models.CurrencySymbol", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CryptoCurrencyId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Symbol")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CurrencySymbols");
-                });
-
             modelBuilder.Entity("CC01_0001.Models.ExchangeFilter", b =>
                 {
                     b.Property<int>("Id")
@@ -246,6 +192,9 @@ namespace CC01_0001.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("ExchangeUpdateId")
+                        .HasColumnType("int");
+
                     b.Property<long?>("ServerTime")
                         .HasColumnType("bigint");
 
@@ -255,14 +204,28 @@ namespace CC01_0001.Migrations
                     b.Property<string>("Timezone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UpdateIntervalId")
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExchangeUpdateId")
+                        .IsUnique();
+
+                    b.ToTable("ExchangeInfos");
+                });
+
+            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdates", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UpdateIntervalId");
-
-                    b.ToTable("ExchangeInfos");
+                    b.ToTable("ExchangeUpdates");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.Filter", b =>
@@ -327,7 +290,7 @@ namespace CC01_0001.Migrations
                     b.Property<bool?>("CancelReplaceAllowed")
                         .HasColumnType("bit");
 
-                    b.Property<int>("CryptoCurrencyId")
+                    b.Property<int>("DatabaseUpdateId")
                         .HasColumnType("int");
 
                     b.Property<int>("ExchangeInfoId")
@@ -366,17 +329,14 @@ namespace CC01_0001.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UpdateIntervalId")
-                        .HasColumnType("int");
+                    b.Property<string>("Symbol")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CryptoCurrencyId")
-                        .IsUnique();
+                    b.HasIndex("DatabaseUpdateId");
 
                     b.HasIndex("ExchangeInfoId");
-
-                    b.HasIndex("UpdateIntervalId");
 
                     b.ToTable("MarketSettingsSet");
                 });
@@ -426,7 +386,7 @@ namespace CC01_0001.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("MarketSettingsId")
+                    b.Property<int>("MarketSettingsId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -491,22 +451,6 @@ namespace CC01_0001.Migrations
                     b.HasIndex("OrderTypeId");
 
                     b.ToTable("SymbolOrderTypes");
-                });
-
-            modelBuilder.Entity("CC01_0001.Models.UpdateInterval", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("UpdateIntervals");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -665,33 +609,6 @@ namespace CC01_0001.Migrations
                     b.Navigation("RateLimit");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.CryptoCurrency", b =>
-                {
-                    b.HasOne("CC01_0001.Models.CurrencySymbol", "CurrencySymbol")
-                        .WithMany("CryptoCurrency")
-                        .HasForeignKey("CurrencySymbolId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
-                        .WithMany("CryptoCurrencies")
-                        .HasForeignKey("ExchangeInfoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("CC01_0001.Models.UpdateInterval", "UpdateInterval")
-                        .WithMany("CryptoCurrencies")
-                        .HasForeignKey("UpdateIntervalId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CurrencySymbol");
-
-                    b.Navigation("ExchangeInfo");
-
-                    b.Navigation("UpdateInterval");
-                });
-
             modelBuilder.Entity("CC01_0001.Models.ExchangeFilter", b =>
                 {
                     b.HasOne("CC01_0001.Models.ExchangeInfo", "BinanceExchangeInfo")
@@ -705,13 +622,13 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.ExchangeInfo", b =>
                 {
-                    b.HasOne("CC01_0001.Models.UpdateInterval", "UpdateInterval")
-                        .WithMany("ExchangeInfos")
-                        .HasForeignKey("UpdateIntervalId")
+                    b.HasOne("CC01_0001.Models.ExchangeUpdates", "ExchangeUpdates")
+                        .WithOne("ExchangeInfo")
+                        .HasForeignKey("CC01_0001.Models.ExchangeInfo", "ExchangeUpdateId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("UpdateInterval");
+                    b.Navigation("ExchangeUpdates");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.Filter", b =>
@@ -725,36 +642,32 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
                 {
-                    b.HasOne("CC01_0001.Models.CryptoCurrency", "CryptoCurrency")
-                        .WithOne("MarketSettings")
-                        .HasForeignKey("CC01_0001.Models.MarketSettings", "CryptoCurrencyId")
+                    b.HasOne("CC01_0001.Models.ExchangeUpdates", "DatabaseUpdate")
+                        .WithMany("MarketSettingsSet")
+                        .HasForeignKey("DatabaseUpdateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
-                        .WithMany()
+                        .WithMany("MarketSettings")
                         .HasForeignKey("ExchangeInfoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CC01_0001.Models.UpdateInterval", "UpdateInterval")
-                        .WithMany("MarketSettingsSet")
-                        .HasForeignKey("UpdateIntervalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CryptoCurrency");
+                    b.Navigation("DatabaseUpdate");
 
                     b.Navigation("ExchangeInfo");
-
-                    b.Navigation("UpdateInterval");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.PermissionSet", b =>
                 {
-                    b.HasOne("CC01_0001.Models.MarketSettings", null)
+                    b.HasOne("CC01_0001.Models.MarketSettings", "MarketSettings")
                         .WithMany("PermissionSets")
-                        .HasForeignKey("MarketSettingsId");
+                        .HasForeignKey("MarketSettingsId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MarketSettings");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.PermissionSetPermissions", b =>
@@ -846,24 +759,21 @@ namespace CC01_0001.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.CryptoCurrency", b =>
-                {
-                    b.Navigation("MarketSettings")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CC01_0001.Models.CurrencySymbol", b =>
-                {
-                    b.Navigation("CryptoCurrency");
-                });
-
             modelBuilder.Entity("CC01_0001.Models.ExchangeInfo", b =>
                 {
                     b.Navigation("BinanceExchangeRateLimits");
 
-                    b.Navigation("CryptoCurrencies");
-
                     b.Navigation("ExchangeFilters");
+
+                    b.Navigation("MarketSettings");
+                });
+
+            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdates", b =>
+                {
+                    b.Navigation("ExchangeInfo")
+                        .IsRequired();
+
+                    b.Navigation("MarketSettingsSet");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
@@ -893,15 +803,6 @@ namespace CC01_0001.Migrations
             modelBuilder.Entity("CC01_0001.Models.RateLimit", b =>
                 {
                     b.Navigation("BinanceExchangeRateLimits");
-                });
-
-            modelBuilder.Entity("CC01_0001.Models.UpdateInterval", b =>
-                {
-                    b.Navigation("CryptoCurrencies");
-
-                    b.Navigation("ExchangeInfos");
-
-                    b.Navigation("MarketSettingsSet");
                 });
 #pragma warning restore 612, 618
         }
