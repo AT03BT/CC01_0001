@@ -53,21 +53,6 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "BinanceExchanges",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Timezone = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ServerTime = table.Column<long>(type: "bigint", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BinanceExchanges", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "BinanceTrades",
                 columns: table => new
                 {
@@ -86,6 +71,20 @@ namespace CC01_0001.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BinanceTrades", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CurrencySymbols",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Symbol = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CryptoCurrencyId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CurrencySymbols", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -129,6 +128,19 @@ namespace CC01_0001.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_RateLimits", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UpdateIntervals",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UpdateIntervals", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -238,6 +250,87 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ExchangeInfos",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Timezone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ServerTime = table.Column<long>(type: "bigint", nullable: true),
+                    UpdateIntervalId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExchangeInfos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExchangeInfos_UpdateIntervals_UpdateIntervalId",
+                        column: x => x.UpdateIntervalId,
+                        principalTable: "UpdateIntervals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BinanceExchangeRateLimits",
+                columns: table => new
+                {
+                    RateLimitId = table.Column<int>(type: "int", nullable: false),
+                    BinanceExchangeId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BinanceExchangeRateLimits", x => new { x.BinanceExchangeId, x.RateLimitId });
+                    table.ForeignKey(
+                        name: "FK_BinanceExchangeRateLimits_ExchangeInfos_BinanceExchangeId",
+                        column: x => x.BinanceExchangeId,
+                        principalTable: "ExchangeInfos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BinanceExchangeRateLimits_RateLimits_RateLimitId",
+                        column: x => x.RateLimitId,
+                        principalTable: "RateLimits",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CryptoCurrencies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CurrencySymbolId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdateIntervalId = table.Column<int>(type: "int", nullable: false),
+                    ExchangeInfoId = table.Column<int>(type: "int", nullable: false),
+                    MarketSettingsId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CryptoCurrencies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CryptoCurrencies_CurrencySymbols_CurrencySymbolId",
+                        column: x => x.CurrencySymbolId,
+                        principalTable: "CurrencySymbols",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CryptoCurrencies_ExchangeInfos_ExchangeInfoId",
+                        column: x => x.ExchangeInfoId,
+                        principalTable: "ExchangeInfos",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CryptoCurrencies_UpdateIntervals_UpdateIntervalId",
+                        column: x => x.UpdateIntervalId,
+                        principalTable: "UpdateIntervals",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ExchangeFilters",
                 columns: table => new
                 {
@@ -249,20 +342,19 @@ namespace CC01_0001.Migrations
                 {
                     table.PrimaryKey("PK_ExchangeFilters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ExchangeFilters_BinanceExchanges_BinanceExchangeInfoId",
+                        name: "FK_ExchangeFilters_ExchangeInfos_BinanceExchangeInfoId",
                         column: x => x.BinanceExchangeInfoId,
-                        principalTable: "BinanceExchanges",
+                        principalTable: "ExchangeInfos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Symbols",
+                name: "MarketSettingsSet",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SymbolName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BaseAsset = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BaseAssetPrecision = table.Column<int>(type: "int", nullable: false),
@@ -279,41 +371,31 @@ namespace CC01_0001.Migrations
                     CancelReplaceAllowed = table.Column<bool>(type: "bit", nullable: false),
                     IsSpotTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
                     IsMarginTradingAllowed = table.Column<bool>(type: "bit", nullable: false),
-                    BinanceExchangeInfoId = table.Column<int>(type: "int", nullable: false)
+                    BinanceExchangeInfoId = table.Column<int>(type: "int", nullable: false),
+                    UpdateIntervalId = table.Column<int>(type: "int", nullable: false),
+                    CryptoCurrencyId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Symbols", x => x.Id);
+                    table.PrimaryKey("PK_MarketSettingsSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Symbols_BinanceExchanges_BinanceExchangeInfoId",
+                        name: "FK_MarketSettingsSet_CryptoCurrencies_CryptoCurrencyId",
+                        column: x => x.CryptoCurrencyId,
+                        principalTable: "CryptoCurrencies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MarketSettingsSet_ExchangeInfos_BinanceExchangeInfoId",
                         column: x => x.BinanceExchangeInfoId,
-                        principalTable: "BinanceExchanges",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BinanceExchangeRateLimits",
-                columns: table => new
-                {
-                    RateLimitId = table.Column<int>(type: "int", nullable: false),
-                    BinanceExchangeId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BinanceExchangeRateLimits", x => new { x.BinanceExchangeId, x.RateLimitId });
-                    table.ForeignKey(
-                        name: "FK_BinanceExchangeRateLimits_BinanceExchanges_BinanceExchangeId",
-                        column: x => x.BinanceExchangeId,
-                        principalTable: "BinanceExchanges",
+                        principalTable: "ExchangeInfos",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BinanceExchangeRateLimits_RateLimits_RateLimitId",
-                        column: x => x.RateLimitId,
-                        principalTable: "RateLimits",
+                        name: "FK_MarketSettingsSet_UpdateIntervals_UpdateIntervalId",
+                        column: x => x.UpdateIntervalId,
+                        principalTable: "UpdateIntervals",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -335,9 +417,9 @@ namespace CC01_0001.Migrations
                 {
                     table.PrimaryKey("PK_Filters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Filters_Symbols_SymbolId",
+                        name: "FK_Filters_MarketSettingsSet_SymbolId",
                         column: x => x.SymbolId,
-                        principalTable: "Symbols",
+                        principalTable: "MarketSettingsSet",
                         principalColumn: "Id");
                 });
 
@@ -347,15 +429,15 @@ namespace CC01_0001.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SymbolId = table.Column<int>(type: "int", nullable: true)
+                    MarketSettingsId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PermissionSets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PermissionSets_Symbols_SymbolId",
-                        column: x => x.SymbolId,
-                        principalTable: "Symbols",
+                        name: "FK_PermissionSets_MarketSettingsSet_MarketSettingsId",
+                        column: x => x.MarketSettingsId,
+                        principalTable: "MarketSettingsSet",
                         principalColumn: "Id");
                 });
 
@@ -363,22 +445,22 @@ namespace CC01_0001.Migrations
                 name: "SymbolOrderTypes",
                 columns: table => new
                 {
-                    SymbolId = table.Column<int>(type: "int", nullable: false),
+                    MarketSettingsId = table.Column<int>(type: "int", nullable: false),
                     OrderTypeId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SymbolOrderTypes", x => new { x.SymbolId, x.OrderTypeId });
+                    table.PrimaryKey("PK_SymbolOrderTypes", x => new { x.MarketSettingsId, x.OrderTypeId });
+                    table.ForeignKey(
+                        name: "FK_SymbolOrderTypes_MarketSettingsSet_MarketSettingsId",
+                        column: x => x.MarketSettingsId,
+                        principalTable: "MarketSettingsSet",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_SymbolOrderTypes_OrderTypes_OrderTypeId",
                         column: x => x.OrderTypeId,
                         principalTable: "OrderTypes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_SymbolOrderTypes_Symbols_SymbolId",
-                        column: x => x.SymbolId,
-                        principalTable: "Symbols",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -452,9 +534,30 @@ namespace CC01_0001.Migrations
                 column: "RateLimitId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CryptoCurrencies_CurrencySymbolId",
+                table: "CryptoCurrencies",
+                column: "CurrencySymbolId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CryptoCurrencies_ExchangeInfoId",
+                table: "CryptoCurrencies",
+                column: "ExchangeInfoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CryptoCurrencies_UpdateIntervalId",
+                table: "CryptoCurrencies",
+                column: "UpdateIntervalId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExchangeFilters_BinanceExchangeInfoId",
                 table: "ExchangeFilters",
                 column: "BinanceExchangeInfoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ExchangeInfos_UpdateIntervalId",
+                table: "ExchangeInfos",
+                column: "UpdateIntervalId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Filters_SymbolId",
@@ -462,24 +565,35 @@ namespace CC01_0001.Migrations
                 column: "SymbolId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_MarketSettingsSet_BinanceExchangeInfoId",
+                table: "MarketSettingsSet",
+                column: "BinanceExchangeInfoId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MarketSettingsSet_CryptoCurrencyId",
+                table: "MarketSettingsSet",
+                column: "CryptoCurrencyId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MarketSettingsSet_UpdateIntervalId",
+                table: "MarketSettingsSet",
+                column: "UpdateIntervalId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PermissionSetPermissions_PermissionId",
                 table: "PermissionSetPermissions",
                 column: "PermissionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermissionSets_SymbolId",
+                name: "IX_PermissionSets_MarketSettingsId",
                 table: "PermissionSets",
-                column: "SymbolId");
+                column: "MarketSettingsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SymbolOrderTypes_OrderTypeId",
                 table: "SymbolOrderTypes",
                 column: "OrderTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Symbols_BinanceExchangeInfoId",
-                table: "Symbols",
-                column: "BinanceExchangeInfoId");
         }
 
         /// <inheritdoc />
@@ -537,10 +651,19 @@ namespace CC01_0001.Migrations
                 name: "OrderTypes");
 
             migrationBuilder.DropTable(
-                name: "Symbols");
+                name: "MarketSettingsSet");
 
             migrationBuilder.DropTable(
-                name: "BinanceExchanges");
+                name: "CryptoCurrencies");
+
+            migrationBuilder.DropTable(
+                name: "CurrencySymbols");
+
+            migrationBuilder.DropTable(
+                name: "ExchangeInfos");
+
+            migrationBuilder.DropTable(
+                name: "UpdateIntervals");
         }
     }
 }

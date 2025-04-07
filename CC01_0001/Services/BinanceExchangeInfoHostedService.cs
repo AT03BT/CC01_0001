@@ -1,4 +1,10 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿/*
+    Models/BinanceExchangeInfo.cs
+    Version: 0.2.0
+    (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
+    https://creativecommons.org/licenses/by/4.0/
+*/
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Net.Http;
@@ -65,7 +71,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
         ApplicationDbContext dbContext;
         HttpResponseMessage httpResponse;
-        BinanceExchange exchangeInfo = new BinanceExchange();
+
         String jsonString;
         IServiceScope scope;
 
@@ -79,7 +85,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
             using (scope = _serviceProvider.CreateScope())
             {
                 dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                ParseExchangeInfo(dbContext, exchangeInfo, jsonString);
+                MakeUpdate(dbContext, DateTime.UtcNow, jsonString);
                 dbContext.SaveChanges();
             }
 
@@ -94,21 +100,53 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
 
 
-
-    private void ParseExchangeInfo(ApplicationDbContext dbContext, BinanceExchange exchangeInfo, string json)
+    private void MakeUpdate(ApplicationDbContext dbContext, DateTime lastUpdate, string json)
     {
-        exchangeInfo.Timestamp = DateTime.UtcNow;
-        var byteBuffer = System.Text.Encoding.UTF8.GetBytes(json);
-        exchangeInfo.BinanceExchangeRateLimits = new List<BinanceExchangeRateLimits>();
-        dbContext.BinanceExchanges.Add(exchangeInfo);
-        dbContext.SaveChanges();
+        UpdateInterval updateInterval;
+        byte[] byteBuffer;
+        JsonReaderOptions readerOptions;
+        Utf8JsonReader reader;
 
-        var options = new JsonReaderOptions
+
+        updateInterval = new UpdateInterval
+        {
+            Timestamp = lastUpdate
+        };
+        dbContext.UpdateIntervals.Add(updateInterval);
+
+        byteBuffer = System.Text.Encoding.UTF8.GetBytes(json);
+        readerOptions = new JsonReaderOptions
         {
             AllowTrailingCommas = true,
             CommentHandling = JsonCommentHandling.Skip
         };
-        var reader = new Utf8JsonReader(byteBuffer, options);
+        reader = new Utf8JsonReader(byteBuffer, readerOptions);
+
+        ParseExchangeInfo(dbContext, updateInterval, reader);
+
+
+        dbContext.SaveChanges();
+    }
+
+
+
+    /* ParseExchangeInfo
+     * -----------------
+     * 
+     * 
+     *
+     */
+    private void ParseExchangeInfo(ApplicationDbContext dbContext, UpdateInterval updateInterval, Utf8JsonReader reader)
+    {
+
+        ExchangeInfo exchangeInfo;
+        
+        
+        exchangeInfo = new ExchangeInfo();
+        updateInterval.ExchangeInfos.Add(exchangeInfo);
+        dbContext.ExchangeInfos.Add(exchangeInfo);
+        dbContext.SaveChanges();
+
 
         while (reader.Read())
         {
@@ -122,14 +160,14 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                         switch (propertyName)
                         {
                             case "symbols":
-                                ParseSymbols(dbContext, exchangeInfo, reader, json);
+                                ParseSymbols(dbContext, exchangeInfo, reader);
                                 break;
-                            case "exchangeFilters":
-                                var exchangeFilters = JsonSerializer.Deserialize<List<ExchangeFilter>>(ref reader, _jsonOptions);
-                                exchangeInfo.ExchangeFilters = exchangeFilters;
-                                break;
+                            //case "exchangeFilters":
+                            //    var exchangeFilters = JsonSerializer.Deserialize<List<ExchangeFilter>>(ref reader, _jsonOptions);
+                            //    exchangeInfo.ExchangeFilters = exchangeFilters;
+                            //    break;
                             case "rateLimits":
-                                ParseRateLimits(dbContext, exchangeInfo, reader, json);
+                                ParseRateLimits(dbContext, exchangeInfo, reader);
                                 break;
                             case "serverTime":
                                 reader.Read();
@@ -152,7 +190,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
     }
 
-    private void ParseRateLimits(ApplicationDbContext dbContext, BinanceExchange exchangeInfo, Utf8JsonReader reader, string json)
+    private void ParseRateLimits(ApplicationDbContext dbContext, ExchangeInfo exchangeInfo, Utf8JsonReader reader)
     {
         reader.Read(); // Move to the start of the array
         if (reader.TokenType == JsonTokenType.StartArray)
@@ -196,7 +234,12 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                     if (existingRateLimit == null)
                     {
                         dbContext.RateLimits.Add(rateLimit);
-                        dbContext.SaveChanges(); // Save the new RateLimit
+                        dbContext.SaveChanges(); // Save the new RateLimit immediately
+                        rateLimit = dbContext.RateLimits.FirstOrDefault(rl =>
+                            rl.RateLimitType == rateLimit.RateLimitType &&
+                            rl.Interval == rateLimit.Interval &&
+                            rl.IntervalNum == rateLimit.IntervalNum &&
+                            rl.Limit == rateLimit.Limit);
                     }
                     else
                     {
@@ -217,7 +260,6 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                     {
                         dbContext.BinanceExchangeRateLimits.Add(binanceExchangeRateLimit);
                     }
-
                 }
             }
             dbContext.SaveChanges(); // Save BinanceExchangeRateLimits
@@ -225,25 +267,34 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
     }
 
 
-    private void ParseSymbols(ApplicationDbContext dbContext, BinanceExchange exchangeInfo, Utf8JsonReader reader, string json)
+    private void ParseSymbols(ApplicationDbContext dbContext, ExchangeInfo exchangeInfo, Utf8JsonReader reader)
     {
+
         var setName = reader.GetString();
-        List<CryptoCurrency> cryptoCurrencies = new List<CryptoCurrency>();
-        exchangeInfo.CryptoCurrencies = cryptoCurrencies;
+        ICollection<CryptoCurrency> cryptoCurrencies = exchangeInfo.CryptoCurrencies;
 
 
         reader.Read();
         var tokenType = reader.TokenType; 
         if (tokenType == JsonTokenType.StartArray)
         {
+
+            CryptoCurrency cryptoCurrency;
+            MarketSettings marketSettings;
+
+
             while (reader.Read())
             {
+                // Parse Symbol
+                cryptoCurrency = new CryptoCurrency();
+                marketSettings = cryptoCurrency.MarketSettings;
+
+                cryptoCurrencies.Add(cryptoCurrency);
+
+
                 if (reader.TokenType == JsonTokenType.StartObject)
                 {
-
-                    CryptoCurrency cryptoCurrency = new CryptoCurrency();
-                    MarketSettings marketSettings = new MarketSettings();
-
+                    // Parse Properties
                     while (reader.Read())
                     {
                         var tokenType2 = reader.TokenType;
@@ -255,7 +306,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                             {
                                 case "permissionSets":
                                     reader.Read();
-                                    ParsePermissionSets(dbContext, marketSettings, reader, json);
+                                    ParseMarketPermissionSets(dbContext, marketSettings, reader);
                                     break;
                                 case "filters":
                                     var filters = JsonSerializer.Deserialize<List<Filter>>(ref reader, _jsonOptions);
@@ -294,7 +345,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                                     marketSettings.IcebergAllowed = reader.GetBoolean();
                                     break;
                                 case "orderTypes":
-                                    ParseOrderTypes(marketSettings, reader, json);
+                                    ParseMarketOrderTypes(dbContext, marketSettings, reader);
                                     break;
                                 case "quoteCommissionPrecision":
                                     reader.Read();
@@ -330,18 +381,35 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                                     break;
                                 case "symbol":
                                     reader.Read();
-                                    cryptoCurrency.Symbol = reader.GetString();
-                                    cryptoCurrency.MarketSettings = marketSettings;
+                                    String? symbol = reader.GetString();
+                                    if (symbol != null)
+                                    {
+                                        // lookup if symbol exists.
+                                        CurrencySymbol? symbol2 = dbContext.CurrencySymbols.FirstOrDefault(cs => cs.Symbol == symbol);
+                                        if (symbol2 == null)
+                                        {
+                                            symbol2 = new CurrencySymbol { Symbol = symbol };
+                                            dbContext.CurrencySymbols.Add(symbol2);
+                                        }
+                                        cryptoCurrency.CurrencySymbol = symbol2;
+                                        dbContext.SaveChanges();
+                                    }
+                                    else
+                                    {
+                                        // Handle the case where the symbol is null
+                                        _logger.LogWarning("Symbol is null.");
+                                    }
                                     break;
                             }
                         }
                         else if (reader.TokenType == JsonTokenType.EndObject)
                         {
-
                             dbContext.SaveChanges();
                             break;
                         }
                     }
+
+
                 }
                 else if (reader.TokenType == JsonTokenType.EndArray)
                 {
@@ -349,10 +417,26 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                 }
             }
         }
+        else
+        {
+            // Handle the case where the expected token type is not found
+        }
+
+        reader.Read();
+        if (reader.TokenType == JsonTokenType.EndArray)
+        {
+            // End of symbols array
+            dbContext.SaveChanges();
+        }
+        else
+        {
+            // Handle the case where the expected token type is not found
+        }
 
     }
 
-    private void ParseOrderTypes(MarketSettings symbol, Utf8JsonReader reader, string json)
+
+    private void ParseMarketOrderTypes(DbContext dbContext, MarketSettings marketSettings, Utf8JsonReader reader)
     {
         reader.Read();
         if (reader.TokenType == JsonTokenType.StartArray)
@@ -364,21 +448,24 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                     string orderTypeTag = reader.GetString();
 
                     // Find or create the OrderType
-                    OrderType orderType = new OrderType { TypeTag = orderTypeTag };
+                    OrderType orderType = new OrderType 
+                    { 
+                        TypeTag = orderTypeTag
+                    };
 
                     // Create the join table entry
                     SymbolOrderType symbolOrderType = new SymbolOrderType
                     {
-                        Symbol = symbol,
+                        marketSettings = marketSettings,
                         OrderType = orderType
                     };
 
                     // Add the join entry to the Symbol
-                    if (symbol.SymbolOrderTypes == null)
+                    if (marketSettings.SymbolOrderTypes == null)
                     {
-                        symbol.SymbolOrderTypes = new List<SymbolOrderType>();
+                        marketSettings.SymbolOrderTypes = new List<SymbolOrderType>();
                     }
-                    symbol.SymbolOrderTypes.Add(symbolOrderType);
+                    marketSettings.SymbolOrderTypes.Add(symbolOrderType);
                 }
                 else if (reader.TokenType == JsonTokenType.EndArray)
                 {
@@ -388,13 +475,14 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
         }
     }
 
-    private void ParsePermissionSets(ApplicationDbContext dbContext, MarketSettings symbol, Utf8JsonReader reader, string json)
+
+    private void ParseMarketPermissionSets(ApplicationDbContext dbContext, MarketSettings marketSettings, Utf8JsonReader reader)
     {
         JsonTokenType tokenType;
         List<PermissionSet> permissionSets;
         PermissionSet permissionSet;
 
-        var symbolName = symbol.SymbolName;
+
         tokenType = reader.TokenType;
         while (reader.Read())
         {
@@ -403,7 +491,7 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
             if (tokenType == JsonTokenType.StartArray)
             {
                 permissionSets = new List<PermissionSet>();
-                ParsePermissionSet(dbContext, permissionSets, reader, json);
+                ParsePermissionSet(dbContext, permissionSets, reader);
 
             }
             else if (tokenType == JsonTokenType.EndArray)
@@ -415,11 +503,11 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
         }
     }
 
-    private void ParsePermissionSet(ApplicationDbContext dbContext, List<PermissionSet> permissionSets, Utf8JsonReader reader, string json)
+    private void ParsePermissionSet(ApplicationDbContext dbContext, List<PermissionSet> permissionSets, Utf8JsonReader reader)
     {
         JsonTokenType tokenType;
         PermissionSet permissionSet = null; // Initialize to null
-        int count = 0;
+
 
         while (true)
         {
@@ -459,12 +547,14 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
 
     }
 
+
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Binance WebSocket Hosted Service stopped.");
         _timer?.Change(Timeout.Infinite, 0);
         return Task.CompletedTask;
     }
+
 
     public void Dispose()
     {

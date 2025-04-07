@@ -7,16 +7,27 @@
 
 using CC01_0001.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.CodeAnalysis.Elfie.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace CC01_0001.Data;
 
 public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
+
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-    public DbSet<BinanceExchange> BinanceExchanges { get; set; }
-    public DbSet<MarketSettings> Symbols { get; set; }
+
+    public DbSet<BinanceExchangeRateLimits> BinanceExchangeRateLimits { get; set; }
+    public DbSet<SymbolOrderType> SymbolOrderTypes { get; set; }
+    public DbSet<PermissionSetPermissions> PermissionSetPermissions { get; set; }
+
+
+    public DbSet<UpdateInterval> UpdateIntervals { get; set; }
+    public DbSet<ExchangeInfo> ExchangeInfos { get; set; }
+    public DbSet<CryptoCurrency> CryptoCurrencies { get; set; }
+    public DbSet<CurrencySymbol> CurrencySymbols { get; set; }
+    public DbSet<MarketSettings> MarketSettingsSet { get; set; }
     public DbSet<RateLimit> RateLimits { get; set; }
     public DbSet<ExchangeFilter> ExchangeFilters { get; set; }
     public DbSet<OrderType> OrderTypes { get; set; }
@@ -28,21 +39,52 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<BinanceTrade> BinanceTrades { get; set; }
 
 
-    // Join Tables
-    public DbSet<SymbolOrderType> SymbolOrderTypes { get; set; }
-    public DbSet<PermissionSetPermissions> PermissionSetPermissions { get; set; }
-    public DbSet<BinanceExchangeRateLimits> BinanceExchangeRateLimits { get; set; }
-
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // One-to-many relationships
+        // Interval 1 to * ExchangeState
+        modelBuilder.Entity<ExchangeInfo>()
+            .HasOne(es => es.UpdateInterval)
+            .WithMany(i => i.ExchangeInfos)
+            .HasForeignKey(es => es.UpdateIntervalId)
+            .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
+
+        // Interval 1 to * CryptoCurrency
+        modelBuilder.Entity<CryptoCurrency>()
+            .HasOne(cc => cc.UpdateInterval)
+            .WithMany(i => i.CryptoCurrencies)
+            .HasForeignKey(cc => cc.UpdateIntervalId)
+            .OnDelete(DeleteBehavior.Restrict);// Change to Restrict or NoAction
+
+        // Interval 1 to * MarketConfiguration
         modelBuilder.Entity<MarketSettings>()
-            .HasOne(s => s.BinanceExchangeInfo)
-            .WithMany(bei => bei.Symbols)
-            .HasForeignKey(s => s.BinanceExchangeInfoId);
+            .HasOne(ms => ms.UpdateInterval)
+            .WithMany(i => i.MarketSettingsSet)
+            .HasForeignKey(mc => mc.UpdateIntervalId)
+            .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
+
+        // ExchangeState 1 to * CryptoCurrency
+        modelBuilder.Entity<CryptoCurrency>()
+            .HasOne(cc => cc.ExchangeInfo)
+            .WithMany(es => es.CryptoCurrencies)
+            .HasForeignKey(cc => cc.ExchangeInfoId)
+            .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
+
+        // CryptoCurrency 1 to 1 Symbol
+        modelBuilder.Entity<CryptoCurrency>()
+            .HasOne(cc => cc.CurrencySymbol)
+            .WithOne(cs => cs.CryptoCurrency)
+            .HasForeignKey<CryptoCurrency>(cc => cc.CurrencySymbolId)
+            .OnDelete(DeleteBehavior.Restrict); // Change to Restrict or NoAction
+
+        // CryptoCurrency 1 to * MarketConfiguration
+        modelBuilder.Entity<MarketSettings>()
+            .HasOne(mc => mc.CryptoCurrency)
+            .WithOne(cc => cc.MarketSettings)
+            .HasForeignKey<MarketSettings>(mc => mc.CryptoCurrencyId);
+
+        // One-to-many relationships
 
         modelBuilder.Entity<ExchangeFilter>()
             .HasOne(ef => ef.BinanceExchangeInfo)
@@ -71,12 +113,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
 
         modelBuilder.Entity<SymbolOrderType>()
-            .HasKey(ot => new { ot.SymbolId, ot.OrderTypeId }); // Composite key
+            .HasKey(ot => new { ot.MarketSettingsId, ot.OrderTypeId }); // Composite key
 
         modelBuilder.Entity<SymbolOrderType>()
-            .HasOne(ot => ot.Symbol)
+            .HasOne(ot => ot.marketSettings)
             .WithMany(s => s.SymbolOrderTypes)
-            .HasForeignKey(ot => ot.SymbolId);
+            .HasForeignKey(ot => ot.MarketSettingsId);
 
         modelBuilder.Entity<SymbolOrderType>()
             .HasOne(ot => ot.OrderType)
@@ -96,25 +138,5 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(ps => ps.Permission)
             .WithMany(p => p.PermissionSetPermissions)
             .HasForeignKey(ps => ps.PermissionId);
-
-
-        modelBuilder.Entity<ExchangeCurrencySettings>()
-            .HasKey(ecs => new { ecs.ExchangeId, ecs.CurrencyId, ecs.MarketSettingsId });
-
-        modelBuilder.Entity<ExchangeCurrencySettings>()
-            .HasOne(ecs => ecs.Exchange)
-            .WithMany()
-            .HasForeignKey(ecs => ecs.ExchangeId);
-
-        modelBuilder.Entity<ExchangeCurrencySettings>()
-            .HasOne(ecs => ecs.Currency)
-            .WithMany()
-            .HasForeignKey(ecs => ecs.Currency);
-
-        modelBuilder.Entity<ExchangeCurrencySettings>()
-            .HasOne(ecs => ecs.MarketSettings)
-            .WithMany()
-            .HasForeignKey(ecs => ecs.MarketSettings);
-
     }
 }

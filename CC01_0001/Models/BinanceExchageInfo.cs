@@ -4,42 +4,78 @@
     (c) 2024, Minh Tri Tran, with assistance from Google's Gemini - Licensed under CC BY 4.0
     https://creativecommons.org/licenses/by/4.0/
 */
+using Microsoft.CodeAnalysis.Elfie.Model;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace CC01_0001.Models;
 
-public class BinanceExchange
+public class UpdateInterval
+{
+    [Key]
+    public int Id { get; set; }
+    public DateTime Timestamp { get; set; }
+
+    public ICollection<ExchangeInfo> ExchangeInfos { get; set; } = new List<ExchangeInfo>();
+    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; } = new List<CryptoCurrency>();
+    public ICollection<MarketSettings> MarketSettingsSet { get; set; } = new List<MarketSettings>();
+}
+
+
+/* ExchangeOutline
+ * ---------------
+ *  The exchange outline holds information related to the symobls and states
+ *  currently thought o update this once per day.
+ */
+public class ExchangeInfo
 {
     [Key]
     public int Id { get; set; } 
     public DateTime Timestamp { get; set; } 
-
-
-    [JsonPropertyName("timezone")]
     public string? Timezone { get; set; }
-
-    [JsonPropertyName("serverTime")]
     public long? ServerTime { get; set; }
 
+    public int UpdateIntervalId { get; set; }
+    public UpdateInterval UpdateInterval { get; set; }
 
-    public List<CryptoCurrency>? CryptoCurrencies { get; set; }
-    public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; }
-
-    [JsonPropertyName("exchangeFilters")]
+    public List<BinanceExchangeRateLimits>? BinanceExchangeRateLimits { get; set; } = new List<BinanceExchangeRateLimits>();
     public List<ExchangeFilter>? ExchangeFilters { get; set; }
+    public ICollection<CryptoCurrency> CryptoCurrencies { get; set; } = new List<CryptoCurrency>();
 }
+
 
 public class CryptoCurrency
 {
     [Key]
     public int Id { get; set; }
-    public string Symbol { get; set; }
+
+    public int CurrencySymbolId { get; set; }
+    public CurrencySymbol CurrencySymbol { get; set; }
+
     public string? Name { get; set; }
 
+    public int UpdateIntervalId { get; set; }
+    public UpdateInterval UpdateInterval { get; set; }
+
+    public int ExchangeInfoId { get; set; }
+    public ExchangeInfo ExchangeInfo { get; set; }
+
+    public int MarketSettingsId { get; set; }
     public MarketSettings MarketSettings { get; set; }
 }
+
+
+public class CurrencySymbol
+{
+    [Key]
+    public int Id { get; set; }
+    public string Symbol { get; set; }
+
+    public int CryptoCurrencyId { get; set; }
+    public CryptoCurrency CryptoCurrency { get; set; }
+}
+
 
 public class MarketSettings
 {
@@ -63,24 +99,19 @@ public class MarketSettings
     public bool IsSpotTradingAllowed { get; set; }
     public bool IsMarginTradingAllowed { get; set; }
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public BinanceExchange? BinanceExchangeInfo { get; set; }
+    public ExchangeInfo? BinanceExchangeInfo { get; set; }
 
-    public List<SymbolOrderType>? SymbolOrderTypes { get; set; }
-    public List<Filter>? Filters { get; set; }
-    public List<PermissionSet>? PermissionSets { get; set; } // Assuming this is a list of permission sets   
+    public int UpdateIntervalId { get; set; }
+    public UpdateInterval UpdateInterval { get; set; }
+
+    public int CryptoCurrencyId { get; set; }
+    public CryptoCurrency CryptoCurrency { get; set; }
+
+    public List<SymbolOrderType>? SymbolOrderTypes { get; set; } = new List<SymbolOrderType>();
+    public List<Filter>? Filters { get; set; } = new List<Filter>();
+    public List<PermissionSet>? PermissionSets { get; set; } = new List<PermissionSet>();
 }
 
-public class ExchangeCurrencySettings
-{
-    public int ExchangeId { get; set; }
-    public BinanceExchange? Exchange { get; set; }
-
-    public int CurrencyId { get; set; }
-    public CryptoCurrency? Currency { get; set; }
-
-    public int MarketSettingsId { get; set; }
-    public MarketSettings? MarketSettings { get; set; }
-}
 
 public class RateLimit
 {
@@ -91,8 +122,9 @@ public class RateLimit
     public int IntervalNum { get; set; }
     public int Limit { get; set; }
 
-    public List<BinanceExchangeRateLimits>?  BinanceExchangeRateLimits { get; set; }
+    public List<BinanceExchangeRateLimits>?  BinanceExchangeRateLimits { get; set; } = new List<BinanceExchangeRateLimits>();
 }
+
 
 public class BinanceExchangeRateLimits
 {
@@ -102,8 +134,9 @@ public class BinanceExchangeRateLimits
 
     [Key] 
     public int BinanceExchangeId { get; set; }
-    public BinanceExchange? BinanceExchange { get; set; }
+    public ExchangeInfo? BinanceExchange { get; set; }
 }
+
 
 public class OrderType
 {
@@ -111,19 +144,21 @@ public class OrderType
     public int Id { get; set; }
     public string TypeTag { get; set; }
 
-    public List<SymbolOrderType>? SymbolOrderTypes { get; set; }
+    public List<SymbolOrderType>? SymbolOrderTypes { get; set; } = new List<SymbolOrderType>();
 }
+
 
 public class SymbolOrderType
 {
     [Key]
-    public int SymbolId { get; set; }
-    public MarketSettings Symbol { get; set; }
+    public int MarketSettingsId { get; set; }
+    public MarketSettings marketSettings { get; set; }
 
     [Key]
     public int OrderTypeId { get; set; }
     public OrderType OrderType { get; set; }
 }
+
 
 public class Filter
 {
@@ -141,12 +176,14 @@ public class Filter
     public MarketSettings? Symbol { get; set; }
 }
 
+
 public class PermissionSet
 {
     [Key]
     public int Id { get; set; }
-    public List<PermissionSetPermissions> PermissionSetPermissions { get; set; }
+    public List<PermissionSetPermissions> PermissionSetPermissions { get; set; } = new List<PermissionSetPermissions>();
 }
+
 
 public class Permission
 {
@@ -155,8 +192,9 @@ public class Permission
     public string PermissionTag { get; set; }
     public string? Description { get; set; }
 
-    public List<PermissionSetPermissions> PermissionSetPermissions { get; set; }
+    public List<PermissionSetPermissions> PermissionSetPermissions { get; set; } = new List<PermissionSetPermissions>();
 }
+
 
 public class PermissionSetPermissions
 {
@@ -169,11 +207,12 @@ public class PermissionSetPermissions
     public Permission Permission { get; set; }
 }
 
+
 public class ExchangeFilter
 {
     [Key]
     public int Id { get; set; }
     // Add properties for exchange filters if needed
     public int BinanceExchangeInfoId { get; set; } // Foreign key
-    public BinanceExchange BinanceExchangeInfo { get; set; }
+    public ExchangeInfo BinanceExchangeInfo { get; set; }
 }
