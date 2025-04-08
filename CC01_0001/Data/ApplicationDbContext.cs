@@ -36,50 +36,28 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(modelBuilder);
 
-        // ExchangeUpdate 1 to 1 ExchangeInfo
         modelBuilder.Entity<ExchangeInfo>()
             .HasOne(ei => ei.ExchangeUpdate)
             .WithOne(eu => eu.ExchangeInfo)
-            .HasForeignKey<ExchangeInfo>(ei => ei.ExchangeUpdateId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey<ExchangeInfo>(ei => ei.ExchangeUpdateId);
 
-        // ExchangeInfo 1 to * MarketSetup
         modelBuilder.Entity<MarketSetup>()
             .HasOne(ms => ms.ExchangeInfo)
             .WithMany(ei => ei.MarketSetups)
-            .HasForeignKey(ms => ms.ExchangeInfoId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(ms => ms.ExchangeInfoId);
 
-        // MarketSetup 1 to * PermissionSetSpacer
-        modelBuilder.Entity<MarketSetup>()
-            .HasOne(ms => ms.ExchangeInfo)
-            .WithMany(ei => ei.MarketSetups)
-            .HasForeignKey(ms => ms.ExchangeInfoId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // ExchangeInfo 1 to * MarketSetup
-        modelBuilder.Entity<MarketSetup>()
-            .HasOne(ms => ms.ExchangeInfo)
-            .WithMany(ei => ei.MarketSetups)
-            .HasForeignKey(ms => ms.ExchangeInfoId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // MarketSetup 1 to * Permission
         modelBuilder.Entity<PermissionSet>()
             .HasOne(p => p.PermissionSetSpacer)
             .WithMany(ms => ms.PermissionSets)
-            .HasForeignKey(p => p.PermissionSetSpacerId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(p => p.PermissionSetSpacerId);
 
-        // MarketSetup 1 to * Permission
         modelBuilder.Entity<Permission>()
             .HasOne(p => p.PermissionSet)
             .WithMany(ms => ms.Permissions)
-            .HasForeignKey(p => p.PermissionSetId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .HasForeignKey(p => p.PermissionSetId);
 
         // One-to-many relationships
-
+        // =========================
         modelBuilder.Entity<ExchangeFilter>()
             .HasOne(ef => ef.ExchangeInfo)
             .WithMany(bei => bei.ExchangeFilters)

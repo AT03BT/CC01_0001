@@ -100,20 +100,6 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Permissions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PermissionTag = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Permissions", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "RateLimits",
                 columns: table => new
                 {
@@ -254,7 +240,7 @@ namespace CC01_0001.Migrations
                         column: x => x.ExchangeUpdateId,
                         principalTable: "ExchangeUpdates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -301,7 +287,7 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MarketSettingsSet",
+                name: "MarketSetups",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -323,22 +309,15 @@ namespace CC01_0001.Migrations
                     CancelReplaceAllowed = table.Column<bool>(type: "bit", nullable: true),
                     IsSpotTradingAllowed = table.Column<bool>(type: "bit", nullable: true),
                     IsMarginTradingAllowed = table.Column<bool>(type: "bit", nullable: true),
-                    ExchangeInfoId = table.Column<int>(type: "int", nullable: false),
-                    DatabaseUpdateId = table.Column<int>(type: "int", nullable: false)
+                    ExchangeInfoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MarketSettingsSet", x => x.Id);
+                    table.PrimaryKey("PK_MarketSetups", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MarketSettingsSet_ExchangeInfos_ExchangeInfoId",
+                        name: "FK_MarketSetups_ExchangeInfos_ExchangeInfoId",
                         column: x => x.ExchangeInfoId,
                         principalTable: "ExchangeInfos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_MarketSettingsSet_ExchangeUpdates_DatabaseUpdateId",
-                        column: x => x.DatabaseUpdateId,
-                        principalTable: "ExchangeUpdates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -362,45 +341,45 @@ namespace CC01_0001.Migrations
                 {
                     table.PrimaryKey("PK_Filters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Filters_MarketSettingsSet_SymbolId",
+                        name: "FK_Filters_MarketSetups_SymbolId",
                         column: x => x.SymbolId,
-                        principalTable: "MarketSettingsSet",
+                        principalTable: "MarketSetups",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "PermissionSets",
+                name: "PermissionSetSpacers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MarketSettingsId = table.Column<int>(type: "int", nullable: false)
+                    MarketSetupId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PermissionSets", x => x.Id);
+                    table.PrimaryKey("PK_PermissionSetSpacers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PermissionSets_MarketSettingsSet_MarketSettingsId",
-                        column: x => x.MarketSettingsId,
-                        principalTable: "MarketSettingsSet",
+                        name: "FK_PermissionSetSpacers_MarketSetups_MarketSetupId",
+                        column: x => x.MarketSetupId,
+                        principalTable: "MarketSetups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "SymbolOrderTypes",
                 columns: table => new
                 {
-                    MarketSettingsId = table.Column<int>(type: "int", nullable: false),
+                    MarketSetupId = table.Column<int>(type: "int", nullable: false),
                     OrderTypeId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SymbolOrderTypes", x => new { x.MarketSettingsId, x.OrderTypeId });
+                    table.PrimaryKey("PK_SymbolOrderTypes", x => new { x.MarketSetupId, x.OrderTypeId });
                     table.ForeignKey(
-                        name: "FK_SymbolOrderTypes_MarketSettingsSet_MarketSettingsId",
-                        column: x => x.MarketSettingsId,
-                        principalTable: "MarketSettingsSet",
+                        name: "FK_SymbolOrderTypes_MarketSetups_MarketSetupId",
+                        column: x => x.MarketSetupId,
+                        principalTable: "MarketSetups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
@@ -412,25 +391,41 @@ namespace CC01_0001.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PermissionSetPermissions",
+                name: "PermissionSets",
                 columns: table => new
                 {
-                    PermissionSetId = table.Column<int>(type: "int", nullable: false),
-                    PermissionId = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PermissionSetSpacerId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PermissionSetPermissions", x => new { x.PermissionSetId, x.PermissionId });
+                    table.PrimaryKey("PK_PermissionSets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PermissionSetPermissions_PermissionSets_PermissionSetId",
-                        column: x => x.PermissionSetId,
-                        principalTable: "PermissionSets",
+                        name: "FK_PermissionSets_PermissionSetSpacers_PermissionSetSpacerId",
+                        column: x => x.PermissionSetSpacerId,
+                        principalTable: "PermissionSetSpacers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Permissions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PermissionSetId = table.Column<int>(type: "int", nullable: false),
+                    PermissionTag = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Permissions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PermissionSetPermissions_Permissions_PermissionId",
-                        column: x => x.PermissionId,
-                        principalTable: "Permissions",
+                        name: "FK_Permissions_PermissionSets_PermissionSetId",
+                        column: x => x.PermissionSetId,
+                        principalTable: "PermissionSets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -496,24 +491,25 @@ namespace CC01_0001.Migrations
                 column: "SymbolId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MarketSettingsSet_DatabaseUpdateId",
-                table: "MarketSettingsSet",
-                column: "DatabaseUpdateId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_MarketSettingsSet_ExchangeInfoId",
-                table: "MarketSettingsSet",
+                name: "IX_MarketSetups_ExchangeInfoId",
+                table: "MarketSetups",
                 column: "ExchangeInfoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermissionSetPermissions_PermissionId",
-                table: "PermissionSetPermissions",
-                column: "PermissionId");
+                name: "IX_Permissions_PermissionSetId",
+                table: "Permissions",
+                column: "PermissionSetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PermissionSets_MarketSettingsId",
+                name: "IX_PermissionSets_PermissionSetSpacerId",
                 table: "PermissionSets",
-                column: "MarketSettingsId");
+                column: "PermissionSetSpacerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PermissionSetSpacers_MarketSetupId",
+                table: "PermissionSetSpacers",
+                column: "MarketSetupId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_SymbolOrderTypes_OrderTypeId",
@@ -552,7 +548,7 @@ namespace CC01_0001.Migrations
                 name: "Filters");
 
             migrationBuilder.DropTable(
-                name: "PermissionSetPermissions");
+                name: "Permissions");
 
             migrationBuilder.DropTable(
                 name: "SymbolOrderTypes");
@@ -570,13 +566,13 @@ namespace CC01_0001.Migrations
                 name: "PermissionSets");
 
             migrationBuilder.DropTable(
-                name: "Permissions");
-
-            migrationBuilder.DropTable(
                 name: "OrderTypes");
 
             migrationBuilder.DropTable(
-                name: "MarketSettingsSet");
+                name: "PermissionSetSpacers");
+
+            migrationBuilder.DropTable(
+                name: "MarketSetups");
 
             migrationBuilder.DropTable(
                 name: "ExchangeInfos");

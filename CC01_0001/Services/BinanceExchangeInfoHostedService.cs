@@ -183,12 +183,12 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                 if (reader.TokenType == JsonTokenType.StartObject)
                 {
 
-                    MarketSetup marketSettings = new MarketSetup()
+                    MarketSetup marketSetup = new MarketSetup()
                     {
                         ExchangeInfo = exchangeInfo,
                     };
 
-                    dbContext.MarketSettingsSet.Add(marketSettings);
+                    dbContext.MarketSetups.Add(marketSetup);
 
                     while (reader.Read() && reader.TokenType != JsonTokenType.EndObject)
                     {
@@ -200,83 +200,84 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                             {
                                 case "permissionSets":
                                     reader.Read();
-                                    ParsePermissionSetSpacer(dbContext, marketSettings, reader); // Changed marketSettings to cryptoCurrency
+                                    dbContext.SaveChanges();
+                                    ParsePermissionSetSpacer(dbContext, marketSetup, reader); // Changed marketSettings to cryptoCurrency
                                     break;
                                 case "filters":
                                     var filters = JsonSerializer.Deserialize<List<Filter>>(ref reader, _jsonOptions);
-                                    marketSettings.Filters = filters;
+                                    marketSetup.Filters = filters;
                                     break;
                                 case "isMarginTradingAllowed":
                                     reader.Read();
-                                    marketSettings.IsMarginTradingAllowed = reader.GetBoolean();
+                                    marketSetup.IsMarginTradingAllowed = reader.GetBoolean();
                                     break;
                                 case "isSpotTradingAllowed":
                                     reader.Read();
-                                    marketSettings.IsSpotTradingAllowed = reader.GetBoolean();
+                                    marketSetup.IsSpotTradingAllowed = reader.GetBoolean();
                                     break;
                                 case "cancelReplaceAllowed":
                                     reader.Read();
-                                    marketSettings.CancelReplaceAllowed = reader.GetBoolean();
+                                    marketSetup.CancelReplaceAllowed = reader.GetBoolean();
                                     break;
                                 case "allowTrailingStop":
                                     reader.Read();
-                                    marketSettings.AllowTrailingStop = reader.GetBoolean();
+                                    marketSetup.AllowTrailingStop = reader.GetBoolean();
                                     break;
                                 case "quoteOrderQtyMarketAllowed":
                                     reader.Read();
-                                    marketSettings.QuoteOrderQtyMarketAllowed = reader.GetBoolean();
+                                    marketSetup.QuoteOrderQtyMarketAllowed = reader.GetBoolean();
                                     break;
                                 case "otoAllowed":
                                     reader.Read();
-                                    marketSettings.OtoAllowed = reader.GetBoolean();
+                                    marketSetup.OtoAllowed = reader.GetBoolean();
                                     break;
                                 case "ocoAllowed":
                                     reader.Read();
-                                    marketSettings.OcoAllowed = reader.GetBoolean();
+                                    marketSetup.OcoAllowed = reader.GetBoolean();
                                     break;
                                 case "icebergAllowed":
                                     reader.Read();
-                                    marketSettings.IcebergAllowed = reader.GetBoolean();
+                                    marketSetup.IcebergAllowed = reader.GetBoolean();
                                     break;
                                 case "orderTypes":
                                     reader.Read();
-                                    ParseMarketOrderTypes(dbContext, marketSettings, reader);
+                                    ParseMarketOrderTypes(dbContext, marketSetup, reader);
                                     break;
                                 case "quoteCommissionPrecision":
                                     reader.Read();
-                                    marketSettings.QuoteCommissionPrecision = reader.GetInt32();
+                                    marketSetup.QuoteCommissionPrecision = reader.GetInt32();
                                     break;
                                 case "baseCommissionPrecision":
                                     reader.Read();
-                                    marketSettings.BaseCommissionPrecision = reader.GetInt32();
+                                    marketSetup.BaseCommissionPrecision = reader.GetInt32();
                                     break;
                                 case "quoteAssetPrecision":
                                     reader.Read();
-                                    marketSettings.QuoteAssetPrecision = reader.GetInt32();
+                                    marketSetup.QuoteAssetPrecision = reader.GetInt32();
                                     break;
                                 case "quotePrecision":
                                     reader.Read();
-                                    marketSettings.QuotePrecision = reader.GetInt32();
+                                    marketSetup.QuotePrecision = reader.GetInt32();
                                     break;
                                 case "quoteAsset":
                                     reader.Read();
-                                    marketSettings.QuoteAsset = reader.GetString();
+                                    marketSetup.QuoteAsset = reader.GetString();
                                     break;
                                 case "baseAssetPrecision":
                                     reader.Read();
-                                    marketSettings.BaseAssetPrecision = reader.GetInt32();
+                                    marketSetup.BaseAssetPrecision = reader.GetInt32();
                                     break;
                                 case "baseAsset":
                                     reader.Read();
-                                    marketSettings.BaseAsset = reader.GetString();
+                                    marketSetup.BaseAsset = reader.GetString();
                                     break;
                                 case "status":
                                     reader.Read();
-                                    marketSettings.Status = reader.GetString();
+                                    marketSetup.Status = reader.GetString();
                                     break;
                                 case "symbol":
                                     reader.Read();
-                                    marketSettings.Symbol = reader.GetString();
+                                    marketSetup.Symbol = reader.GetString();
                                     break;
                             }
                         }
@@ -429,6 +430,12 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
                 dbContext.PermissionSetSpacers.Add(permissionSetSpacer);
                 ParsePermissionSet(dbContext, permissionSetSpacer, reader);
 
+                dbContext.SaveChanges();
+                break;
+            }
+            else if(tokenType == JsonTokenType.String)
+            {
+                var tokenStringValue = reader.GetString();
             }
             else if (tokenType == JsonTokenType.EndArray)
             {
@@ -445,16 +452,15 @@ public class BinanceExchangeInfoHostedService : IHostedService, IDisposable
         PermissionSet permissionSet = new PermissionSet();
 
         tokenType = reader.TokenType;
-        if (tokenType == JsonTokenType.StartArray)
-        {
-            dbContext.PermissionSets.Add(permissionSet);
-            permissionSetSpacer.PermissionSets.Add(permissionSet);
-        }
         while (reader.Read())
         {
-
-
-            if (tokenType == JsonTokenType.String)
+            tokenType = reader.TokenType;
+            if (tokenType == JsonTokenType.StartArray)
+            {
+                dbContext.PermissionSets.Add(permissionSet);
+                permissionSetSpacer.PermissionSets.Add(permissionSet);
+            }
+            else if (reader.TokenType == JsonTokenType.String)
             {
 
                 var permissionTag = reader.GetString();

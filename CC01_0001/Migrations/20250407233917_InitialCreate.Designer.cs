@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CC01_0001.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250407191106_InitialCreate")]
+    [Migration("20250407233917_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -212,7 +212,7 @@ namespace CC01_0001.Migrations
                     b.ToTable("ExchangeInfos");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdates", b =>
+            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdate", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -267,7 +267,7 @@ namespace CC01_0001.Migrations
                     b.ToTable("Filters");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
+            modelBuilder.Entity("CC01_0001.Models.MarketSetup", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -289,9 +289,6 @@ namespace CC01_0001.Migrations
 
                     b.Property<bool?>("CancelReplaceAllowed")
                         .HasColumnType("bit");
-
-                    b.Property<int>("DatabaseUpdateId")
-                        .HasColumnType("int");
 
                     b.Property<int>("ExchangeInfoId")
                         .HasColumnType("int");
@@ -334,11 +331,9 @@ namespace CC01_0001.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DatabaseUpdateId");
-
                     b.HasIndex("ExchangeInfoId");
 
-                    b.ToTable("MarketSettingsSet");
+                    b.ToTable("MarketSetups");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.OrderType", b =>
@@ -369,11 +364,16 @@ namespace CC01_0001.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("PermissionSetId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PermissionTag")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PermissionSetId");
 
                     b.ToTable("Permissions");
                 });
@@ -386,29 +386,33 @@ namespace CC01_0001.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("MarketSettingsId")
+                    b.Property<int>("PermissionSetSpacerId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MarketSettingsId");
+                    b.HasIndex("PermissionSetSpacerId");
 
                     b.ToTable("PermissionSets");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.PermissionSetPermissions", b =>
+            modelBuilder.Entity("CC01_0001.Models.PermissionSetSpacer", b =>
                 {
-                    b.Property<int>("PermissionSetId")
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("PermissionId")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("MarketSetupId")
                         .HasColumnType("int");
 
-                    b.HasKey("PermissionSetId", "PermissionId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("PermissionId");
+                    b.HasIndex("MarketSetupId")
+                        .IsUnique();
 
-                    b.ToTable("PermissionSetPermissions");
+                    b.ToTable("PermissionSetSpacers");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.RateLimit", b =>
@@ -440,13 +444,13 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.SymbolOrderType", b =>
                 {
-                    b.Property<int>("MarketSettingsId")
+                    b.Property<int>("MarketSetupId")
                         .HasColumnType("int");
 
                     b.Property<int>("OrderTypeId")
                         .HasColumnType("int");
 
-                    b.HasKey("MarketSettingsId", "OrderTypeId");
+                    b.HasKey("MarketSetupId", "OrderTypeId");
 
                     b.HasIndex("OrderTypeId");
 
@@ -611,89 +615,84 @@ namespace CC01_0001.Migrations
 
             modelBuilder.Entity("CC01_0001.Models.ExchangeFilter", b =>
                 {
-                    b.HasOne("CC01_0001.Models.ExchangeInfo", "BinanceExchangeInfo")
+                    b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
                         .WithMany("ExchangeFilters")
                         .HasForeignKey("BinanceExchangeInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("BinanceExchangeInfo");
+                    b.Navigation("ExchangeInfo");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.ExchangeInfo", b =>
                 {
-                    b.HasOne("CC01_0001.Models.ExchangeUpdates", "ExchangeUpdates")
+                    b.HasOne("CC01_0001.Models.ExchangeUpdate", "ExchangeUpdate")
                         .WithOne("ExchangeInfo")
                         .HasForeignKey("CC01_0001.Models.ExchangeInfo", "ExchangeUpdateId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ExchangeUpdates");
+                    b.Navigation("ExchangeUpdate");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.Filter", b =>
                 {
-                    b.HasOne("CC01_0001.Models.MarketSettings", "Symbol")
+                    b.HasOne("CC01_0001.Models.MarketSetup", "Symbol")
                         .WithMany("Filters")
                         .HasForeignKey("SymbolId");
 
                     b.Navigation("Symbol");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
+            modelBuilder.Entity("CC01_0001.Models.MarketSetup", b =>
                 {
-                    b.HasOne("CC01_0001.Models.ExchangeUpdates", "DatabaseUpdate")
-                        .WithMany("MarketSettingsSet")
-                        .HasForeignKey("DatabaseUpdateId")
+                    b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
+                        .WithMany("MarketSetups")
+                        .HasForeignKey("ExchangeInfoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("CC01_0001.Models.ExchangeInfo", "ExchangeInfo")
-                        .WithMany("MarketSettings")
-                        .HasForeignKey("ExchangeInfoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DatabaseUpdate");
 
                     b.Navigation("ExchangeInfo");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.PermissionSet", b =>
+            modelBuilder.Entity("CC01_0001.Models.Permission", b =>
                 {
-                    b.HasOne("CC01_0001.Models.MarketSettings", "MarketSettings")
-                        .WithMany("PermissionSets")
-                        .HasForeignKey("MarketSettingsId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MarketSettings");
-                });
-
-            modelBuilder.Entity("CC01_0001.Models.PermissionSetPermissions", b =>
-                {
-                    b.HasOne("CC01_0001.Models.Permission", "Permission")
-                        .WithMany("PermissionSetPermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CC01_0001.Models.PermissionSet", "PermissionSet")
-                        .WithMany("PermissionSetPermissions")
+                        .WithMany("Permissions")
                         .HasForeignKey("PermissionSetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Permission");
-
                     b.Navigation("PermissionSet");
+                });
+
+            modelBuilder.Entity("CC01_0001.Models.PermissionSet", b =>
+                {
+                    b.HasOne("CC01_0001.Models.PermissionSetSpacer", "PermissionSetSpacer")
+                        .WithMany("PermissionSets")
+                        .HasForeignKey("PermissionSetSpacerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PermissionSetSpacer");
+                });
+
+            modelBuilder.Entity("CC01_0001.Models.PermissionSetSpacer", b =>
+                {
+                    b.HasOne("CC01_0001.Models.MarketSetup", "MarketSetup")
+                        .WithOne("PermissionSetSpacer")
+                        .HasForeignKey("CC01_0001.Models.PermissionSetSpacer", "MarketSetupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MarketSetup");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.SymbolOrderType", b =>
                 {
-                    b.HasOne("CC01_0001.Models.MarketSettings", "marketSettings")
+                    b.HasOne("CC01_0001.Models.MarketSetup", "marketSetup")
                         .WithMany("SymbolOrderTypes")
-                        .HasForeignKey("MarketSettingsId")
+                        .HasForeignKey("MarketSetupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -705,7 +704,7 @@ namespace CC01_0001.Migrations
 
                     b.Navigation("OrderType");
 
-                    b.Navigation("marketSettings");
+                    b.Navigation("marketSetup");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -765,22 +764,21 @@ namespace CC01_0001.Migrations
 
                     b.Navigation("ExchangeFilters");
 
-                    b.Navigation("MarketSettings");
+                    b.Navigation("MarketSetups");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdates", b =>
+            modelBuilder.Entity("CC01_0001.Models.ExchangeUpdate", b =>
                 {
                     b.Navigation("ExchangeInfo")
                         .IsRequired();
-
-                    b.Navigation("MarketSettingsSet");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.MarketSettings", b =>
+            modelBuilder.Entity("CC01_0001.Models.MarketSetup", b =>
                 {
                     b.Navigation("Filters");
 
-                    b.Navigation("PermissionSets");
+                    b.Navigation("PermissionSetSpacer")
+                        .IsRequired();
 
                     b.Navigation("SymbolOrderTypes");
                 });
@@ -790,14 +788,14 @@ namespace CC01_0001.Migrations
                     b.Navigation("SymbolOrderTypes");
                 });
 
-            modelBuilder.Entity("CC01_0001.Models.Permission", b =>
-                {
-                    b.Navigation("PermissionSetPermissions");
-                });
-
             modelBuilder.Entity("CC01_0001.Models.PermissionSet", b =>
                 {
-                    b.Navigation("PermissionSetPermissions");
+                    b.Navigation("Permissions");
+                });
+
+            modelBuilder.Entity("CC01_0001.Models.PermissionSetSpacer", b =>
+                {
+                    b.Navigation("PermissionSets");
                 });
 
             modelBuilder.Entity("CC01_0001.Models.RateLimit", b =>

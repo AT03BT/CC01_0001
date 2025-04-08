@@ -18,7 +18,6 @@ public class ExchangeUpdate
     public DateTime Timestamp { get; set; }
 
     public ExchangeInfo ExchangeInfo { get; set; }
-    public ICollection<MarketSetup> MarketSetups { get; set; }
 }
 
 public class ExchangeInfo
@@ -68,9 +67,6 @@ public class MarketSetup
 
     public int ExchangeInfoId { get; set; } // Foreign key
     public ExchangeInfo ExchangeInfo { get; set; }
-
-    public int ExchangeUpdateId { get; set; }
-    public ExchangeUpdate ExchangeUpdate { get; set; }
 
     public List<SymbolOrderType>? SymbolOrderTypes { get; set; } = new List<SymbolOrderType>();
     public List<Filter>? Filters { get; set; } = new List<Filter>();
