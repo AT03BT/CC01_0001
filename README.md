@@ -1,1 +1,32 @@
-![output-onlinetools (1)](https://github.com/user-attachments/assets/e61d75a9-a523-45dc-a7b0-bc2d77542c0a)
+# CC01_0001 - Data Analytics and Visualization
+<pre>
+
+                 MARKET OVERVIEW
+                        |
+    +-------------------+-------------------+
+    |                   |                   |
+ SEGMENT A          SEGMENT B          SEGMENT C
+    |                   |                   |
++---+---+           +---+---+           +---+---+
+|       |           |       |           |       |
+COMP1   COMP2     COMP3   COMP4      COMP5   COMP6
+|   |   |   |     |   |   |   |      |   |   |   |
+$   $   $   $     $   $   $   $      $   $   $   $
+
+ANALYTICS DASHBOARD
++----------------+
+|  KPI METRICS   |
+| Revenue: $$$   |
+| Growth: ↑25%   |
+| Share:  35%    |
++----------------+
+       |
+   DECISION TREE
+       |
+    [Y/N]─────┐
+      |       |
+  ACTION 1  ACTION 2
+      |       |
+   IMPACT   IMPACT
+    [↑↓]     [↑↓]
+</pre>
